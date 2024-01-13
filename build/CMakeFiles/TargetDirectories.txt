@@ -1,9 +1,0 @@
-/home/vheath/cppProjects/opengl-solarSystem/Developing/build/CMakeFiles/out.dir
-/home/vheath/cppProjects/opengl-solarSystem/Developing/build/CMakeFiles/edit_cache.dir
-/home/vheath/cppProjects/opengl-solarSystem/Developing/build/CMakeFiles/rebuild_cache.dir
-/home/vheath/cppProjects/opengl-solarSystem/Developing/build/lib/gladF/CMakeFiles/glad.dir
-/home/vheath/cppProjects/opengl-solarSystem/Developing/build/lib/gladF/CMakeFiles/edit_cache.dir
-/home/vheath/cppProjects/opengl-solarSystem/Developing/build/lib/gladF/CMakeFiles/rebuild_cache.dir
-/home/vheath/cppProjects/opengl-solarSystem/Developing/build/lib/stb_image/CMakeFiles/stb_image.dir
-/home/vheath/cppProjects/opengl-solarSystem/Developing/build/lib/stb_image/CMakeFiles/edit_cache.dir
-/home/vheath/cppProjects/opengl-solarSystem/Developing/build/lib/stb_image/CMakeFiles/rebuild_cache.dir
