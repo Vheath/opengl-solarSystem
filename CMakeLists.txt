@@ -6,6 +6,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 find_package(OpenGL REQUIRED)
 add_subdirectory(lib/gladF)
 add_subdirectory(lib/stb_image)
+add_subdirectory(lib/imgui)
 add_executable(
     out
     ${PROJECT_SOURCE_DIR}/src/main.cpp
@@ -14,9 +15,14 @@ add_executable(
 )
 target_compile_features(out PRIVATE cxx_std_20)
 
-target_include_directories(out PRIVATE ${PROJECT_SOURCE_DIR})
+target_include_directories(
+    out
+    PRIVATE ${PROJECT_SOURCE_DIR}
+    PRIVATE ${PROJECT_SOURCE_DIR}/lib/
+)
 
 target_link_libraries(out glad)
 target_link_libraries(out stb_image)
 target_link_libraries(out glfw)
+target_link_libraries(out imgui)
 target_link_libraries(out OpenGL::GL)

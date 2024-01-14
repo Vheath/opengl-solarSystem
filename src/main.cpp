@@ -1,6 +1,10 @@
+#include "imgui/imgui.h"
+#include "imgui/imgui_impl_glfw.h"
+#include "imgui/imgui_impl_opengl3.h"
+
 #include <glad/glad.h>
 
-#include "lib/stb_image/stb_image.h"
+#include "stb_image/stb_image.h"
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -74,9 +78,9 @@ int main() {
   // build and compile shaders
   // -------------------------
   Shader lightCubeShader("../src/ShadersGLSL/shaderLightSource.vert",
-                        "../src/ShadersGLSL/shaderLightSource.frag");
+                         "../src/ShadersGLSL/shaderLightSource.frag");
   Shader lightingShader("../src/ShadersGLSL/lightShader.vert",
-                         "../src/ShadersGLSL/lightShader.frag");
+                        "../src/ShadersGLSL/lightShader.frag");
 
   // set up vertex data (and buffer(s)) and configure vertex attributes
   // ------------------------------------------------------------------
@@ -168,6 +172,14 @@ int main() {
   lightingShader.setInt("material.diffuse", 0);
   lightingShader.setInt("material.specular", 1);
 
+  IMGUI_CHECKVERSION();
+  ImGui::CreateContext();
+  ImGuiIO &io = ImGui::GetIO();
+  (void)io;
+  ImGui::StyleColorsDark();
+  ImGui_ImplGlfw_InitForOpenGL(window, true);
+  ImGui_ImplOpenGL3_Init("#version 330");
+
   // render loop
   // -----------
   while (!glfwWindowShouldClose(window)) {
@@ -185,6 +197,10 @@ int main() {
     // ------
     glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    ImGui_ImplOpenGL3_NewFrame();
+    ImGui_ImplGlfw_NewFrame();
+    ImGui::NewFrame();
 
     // be sure to activate shader when setting uniforms/drawing objects
     lightingShader.use();
@@ -249,6 +265,12 @@ int main() {
     // glBindVertexArray(lightCubeVAO);
     // glDrawArrays(GL_TRIANGLES, 0, 36);
 
+    ImGui::Begin("My name is window, ImGUI window");
+    ImGui::Text("Hello there adventurer!");
+    ImGui::End();
+
+    ImGui::Render();
+    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
     // glfw: swap buffers and poll IO events (keys pressed/released, mouse
     // moved etc.)
     // -------------------------------------------------------------------------------
@@ -258,6 +280,9 @@ int main() {
 
   // optional: de-allocate all resources once they've outlived their purpose:
   // ------------------------------------------------------------------------
+  ImGui_ImplOpenGL3_Shutdown();
+  ImGui_ImplGlfw_Shutdown();
+  ImGui::DestroyContext();
   glDeleteVertexArrays(1, &cubeVAO);
   glDeleteVertexArrays(1, &lightCubeVAO);
   glDeleteBuffers(1, &VBO);
