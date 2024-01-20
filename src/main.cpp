@@ -175,7 +175,7 @@ int main()
     ImGui::StyleColorsDark();
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init("#version 330");
-
+    float lightDir[3] = { -0.2f, -1.0f, -0.3f };
     // render loop
     // -----------
     while (!glfwWindowShouldClose(window)) {
@@ -200,7 +200,7 @@ int main()
 
         // be sure to activate shader when setting uniforms/drawing objects
         lightingShader.use();
-        lightingShader.setVec3("light.direction", -0.2f, -1.0f, -0.3f);
+        lightingShader.setVec3("light.direction", lightDir[0], lightDir[1], lightDir[2]);
         lightingShader.setVec3("viewPos", camera.Position);
 
         // light properties
@@ -250,9 +250,9 @@ int main()
         // glBindVertexArray(lightCubeVAO);
         // glDrawArrays(GL_TRIANGLES, 0, 36);
 
-        ImGui::Begin("My name is window, ImGUI window");
-        ImGui::Text("Hello there adventurer!");
+        ImGui::Begin("Solar system control menu!");
         ImGui::Checkbox("Draw cube", &drawCube);
+        ImGui::SliderFloat3("Light direction", &lightDir[0], -1.0f, 1.0f);
         ImGui::End();
 
         ImGui::Render();
@@ -289,7 +289,6 @@ void processInput(GLFWwindow* window)
     static int lastFrameLeftShift {};
 
     if ((glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) && lastFrameLeftShift == GLFW_RELEASE) {
-
         if (glfwGetInputMode(window, GLFW_CURSOR) == GLFW_CURSOR_DISABLED) {
             glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
             moveCamera = false;
