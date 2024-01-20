@@ -140,9 +140,9 @@ int main()
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float),
         (void*)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float),
-        (void*)(6 * sizeof(float)));
-    glEnableVertexAttribArray(2);
+    // glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float),
+    //    (void*)(6 * sizeof(float)));
+    // glEnableVertexAttribArray(2);
 
     // second, configure the light's VAO (VBO stays the same; the vertices are
     // the same for the light object which is also a 3D cube)
@@ -159,14 +159,14 @@ int main()
     // load textures (we now use a utility function to keep the code more
     // organized)
     // -----------------------------------------------------------------------------
-    unsigned int diffuseMap = loadTexture("../otherFiles/WoodenSteelContainer.png");
-    unsigned int specularMap = loadTexture("../otherFiles/WoodenSteelContainerSpecular.png");
+    // unsigned int diffuseMap = loadTexture("../otherFiles/WoodenSteelContainer.png");
+    // unsigned int specularMap = loadTexture("../otherFiles/WoodenSteelContainerSpecular.png");
 
     // shader configuration
     // --------------------
     lightingShader.use();
-    lightingShader.setInt("material.diffuse", 0);
-    lightingShader.setInt("material.specular", 1);
+    // lightingShader.setInt("material.diffuse", 0);
+    // lightingShader.setInt("material.specular", 1);
 
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
@@ -176,6 +176,7 @@ int main()
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init("#version 330");
     float lightDir[3] = { -0.2f, -1.0f, -0.3f };
+    float color[3] = { 1.0f, 0.3f, 0.4f };
     // render loop
     // -----------
     while (!glfwWindowShouldClose(window)) {
@@ -210,7 +211,6 @@ int main()
 
         // material properties
         lightingShader.setFloat("material.shininess", 64.0f);
-
         // view/projection transformations
         glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom),
             (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
@@ -223,11 +223,11 @@ int main()
         lightingShader.setMat4("model", model);
 
         // bind diffuse map
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, diffuseMap);
-        // bind specular map
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, specularMap);
+        // glActiveTexture(GL_TEXTURE0);
+        // glBindTexture(GL_TEXTURE_2D, diffuseMap);
+        // // bind specular map
+        // glActiveTexture(GL_TEXTURE1);
+        // glBindTexture(GL_TEXTURE_2D, specularMap);
 
         // render the cube
         // glBindVertexArray(cubeVAO);
@@ -253,7 +253,10 @@ int main()
         ImGui::Begin("Solar system control menu!");
         ImGui::Checkbox("Draw cube", &drawCube);
         ImGui::SliderFloat3("Light direction", &lightDir[0], -1.0f, 1.0f);
+        ImGui::ColorEdit3("Color", color);
         ImGui::End();
+
+        lightingShader.setVec3("material.color", color[0], color[1], color[2]);
 
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
