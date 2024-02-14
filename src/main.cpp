@@ -2,10 +2,12 @@
 #include "imgui/imgui_impl_glfw.h"
 #include "imgui/imgui_impl_opengl3.h"
 
+#include <cmath>
 #include <glad/glad.h>
 
 #include "stb_image/stb_image.h"
 #include <GLFW/glfw3.h>
+#include <glm/ext/matrix_transform.hpp>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -14,12 +16,16 @@
 #include "include/shader.h"
 
 #include <iostream>
+#include <math.h>
+#include <numbers>
+#include <vector>
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void processInput(GLFWwindow* window);
 unsigned int loadTexture(const char* path);
+void icosahedronDraw(float radius);
 
 // imgui
 bool drawCube = true;
@@ -177,6 +183,7 @@ int main()
     ImGui_ImplOpenGL3_Init("#version 330");
     float lightDir[3] = { -0.2f, -1.0f, -0.3f };
     float color[3] = { 1.0f, 0.3f, 0.4f };
+    float radiusSphere { 1.0f };
     // render loop
     // -----------
     while (!glfwWindowShouldClose(window)) {
@@ -236,7 +243,7 @@ int main()
         // render containers
         glBindVertexArray(cubeVAO);
         if (drawCube)
-            glDrawArrays(GL_TRIANGLES, 0, 36);
+            icosahedronDraw(radiusSphere);
 
         // a lamp object is weird when we only have a directional light, don't
         // render the light object lightCubeShader.use();
@@ -254,6 +261,7 @@ int main()
         ImGui::Checkbox("Draw cube", &drawCube);
         ImGui::SliderFloat3("Light direction", &lightDir[0], -1.0f, 1.0f);
         ImGui::ColorEdit3("Color", color);
+        ImGui::SliderFloat("Radius", &radiusSphere, -10.0f, 10.0f);
         ImGui::End();
 
         lightingShader.setVec3("material.color", color[0], color[1], color[2]);
@@ -388,4 +396,42 @@ unsigned int loadTexture(char const* path)
     }
 
     return textureID;
+}
+
+void icosahedronDraw(float radius)
+{
+    float X { 0.525731112119133606f };
+    float Z { 0.850650808352039932f };
+
+    float vertices[12][3] {
+        { -X, 0, Z }, { X, 0, Z }, { -X, 0, -Z }, { X, 0, -Z },
+        { 0, Z, X }, { 0, Z, -X }, { 0, -Z, X }, { 0, -Z, -X },
+        { Z, X, 0 }, { -Z, X, 0 }, { Z, -X, 0 }, { -Z, -X, 0 }
+    };
+
+    for (auto element : vertices) {
+        element[0] *= radius;
+        element[1] *= radius;
+        element[2] *= radius;
+    }
+
+    static unsigned int tindices[20][3] = {
+        { 1, 4, 0 }, { 4, 9, 0 }, { 4, 9, 5 }, { 8, 5, 4 }, { 1, 8, 4 },
+        { 1, 10, 8 }, { 10, 3, 8 }, { 8, 3, 5 }, { 3, 2, 5 }, { 3, 7, 2 },
+        { 3, 10, 7 }, { 10, 6, 7 }, { 6, 11, 7 }, { 6, 0, 11 }, { 6, 1, 0 },
+        { 10, 1, 6 }, { 11, 0, 9 }, { 2, 11, 9 }, { 5, 2, 9 }, { 11, 2, 7 }
+    };
+
+    unsigned int VBOB, icoVAO;
+    glGenVertexArrays(1, &icoVAO);
+    glGenBuffers(1, &VBOB);
+
+    glBindBuffer(GL_ARRAY_BUFFER, VBOB);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+    glBindVertexArray(icoVAO);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+
+    glDrawElements(GL_TRIANGLES, 60, GL_UNSIGNED_INT, tindices);
 }
