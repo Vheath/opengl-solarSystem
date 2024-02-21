@@ -14,6 +14,7 @@
 
 #include "include/camera.h"
 #include "include/shader.h"
+#include "include/sphere.h"
 
 #include <iostream>
 #include <math.h>
@@ -184,6 +185,8 @@ int main()
     float lightDir[3] = { -0.2f, -1.0f, -0.3f };
     float color[3] = { 1.0f, 0.3f, 0.4f };
     float radiusSphere { 1.0f };
+
+    Sphere sphere {};
     // render loop
     // -----------
     while (!glfwWindowShouldClose(window)) {
@@ -242,8 +245,8 @@ int main()
 
         // render containers
         glBindVertexArray(cubeVAO);
-        if (drawCube)
-            icosahedronDraw(radiusSphere);
+         if (drawCube)
+           sphere.draw(1.0f);
 
         // a lamp object is weird when we only have a directional light, don't
         // render the light object lightCubeShader.use();
@@ -421,17 +424,4 @@ void icosahedronDraw(float radius)
         { 3, 10, 7 }, { 10, 6, 7 }, { 6, 11, 7 }, { 6, 0, 11 }, { 6, 1, 0 },
         { 10, 1, 6 }, { 11, 0, 9 }, { 2, 11, 9 }, { 5, 2, 9 }, { 11, 2, 7 }
     };
-
-    unsigned int VBOB, icoVAO;
-    glGenVertexArrays(1, &icoVAO);
-    glGenBuffers(1, &VBOB);
-
-    glBindBuffer(GL_ARRAY_BUFFER, VBOB);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-    glBindVertexArray(icoVAO);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);
-
-    glDrawElements(GL_TRIANGLES, 60, GL_UNSIGNED_INT, tindices);
 }
