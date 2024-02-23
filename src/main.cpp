@@ -49,7 +49,10 @@ int main()
 {
     // glfw: initialize and configure
     // ------------------------------
-    glfwInit(); glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3); glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3); glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    glfwInit();
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
 #ifdef __APPLE__
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
@@ -181,9 +184,9 @@ int main()
     ImGui_ImplOpenGL3_Init("#version 330");
     float lightDir[3] = { -0.2f, -1.0f, -0.3f };
     float color[3] = { 1.0f, 0.3f, 0.4f };
-    float radiusSphere { 1.0f };
+    float radius { 1.0f };
 
-    Sphere sphere {};
+    Sphere sphere { 1.0f };
     // render loop
     // -----------
     while (!glfwWindowShouldClose(window)) {
@@ -241,7 +244,8 @@ int main()
         // glDrawArrays(GL_TRIANGLES, 0, 36);*/
 
         // render containers
-        sphere.draw(1.0f);
+        sphere.draw();
+        sphere.setRadius(radius);
 
         // a lamp object is weird when we only have a directional light, don't
         // render the light object lightCubeShader.use();
@@ -259,7 +263,7 @@ int main()
         ImGui::Checkbox("Draw cube", &drawCube);
         ImGui::SliderFloat3("Light direction", &lightDir[0], -1.0f, 1.0f);
         ImGui::ColorEdit3("Color", color);
-        ImGui::SliderFloat("Radius", &radiusSphere, -10.0f, 10.0f);
+        ImGui::SliderFloat("Radius", &radius, 0.1f, 10.0f);
         ImGui::End();
 
         lightingShader.setVec3("material.color", color[0], color[1], color[2]);
