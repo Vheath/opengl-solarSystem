@@ -4,21 +4,21 @@
 #include <GLFW/glfw3.h>
 #include <cmath>
 
-
-Sphere::Sphere(float radius)
+Sphere::Sphere(float radius, int subdivision)
+    : m_subdivision(subdivision)
 {
     setRadius(radius);
 
-    glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
+    glGenVertexArrays(1, &m_VAO);
+    glGenBuffers(1, &m_VBO);
 }
 
 // setters
 void Sphere::setRadius(float radius)
 {
-    this->radius = radius;
-    this->edgeLength = radius / sinf(2 * 3.141592f / 5);
-    if (vertices.size() <= 0)
+    m_radius = radius;
+    m_edgeLength = radius / sinf(2 * 3.141592f / 5);
+    if (m_vertices.size() <= 0)
         buildVertices();
     else
         updateRadius(); // update vertex positions only
@@ -26,44 +26,51 @@ void Sphere::setRadius(float radius)
 
 void Sphere::setEdgeLength(float edge)
 {
-    this->edgeLength = edge;
-    this->radius = edge * sinf(2 * 3.141592f / 5);
+    m_edgeLength = edge;
+    m_radius = edge * sinf(2 * 3.141592f / 5);
     updateRadius(); // update vertex positions only
+}
+
+void Sphere::setSubdivision(int subdivision)
+{
+    m_subdivision = subdivision;
+
+    buildVertices();
 }
 
 // draw an icosahedron
 void Sphere::draw() const
 {
 
-    glBindVertexArray(VAO);
+    glBindVertexArray(m_VAO);
 
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, interleavedVertices.size() * sizeof(float), &interleavedVertices[0], GL_STATIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, m_VBO);
+    glBufferData(GL_ARRAY_BUFFER, m_interleavedVertices.size() * sizeof(float), &m_interleavedVertices[0], GL_STATIC_DRAW);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
 
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)+(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
 
-    glDrawElements(GL_TRIANGLES, (unsigned int)indices.size(), GL_UNSIGNED_INT, indices.data());
+    glDrawElements(GL_TRIANGLES, (unsigned int)m_indices.size(), GL_UNSIGNED_INT, m_indices.data());
 }
 
 // update vertex positions only
 void Sphere::updateRadius()
 {
-    float scale = sqrtf(radius * radius / (vertices[0] * vertices[0] + vertices[1] * vertices[1] + vertices[2] * vertices[2]));
+    float scale = sqrtf(m_radius * m_radius / (m_vertices[0] * m_vertices[0] + m_vertices[1] * m_vertices[1] + m_vertices[2] * m_vertices[2]));
 
     std::size_t i, j;
-    std::size_t count = vertices.size();
+    std::size_t count = m_vertices.size();
     for (i = 0, j = 0; i < count; i += 3, j += 8) {
-        vertices[i] *= scale;
-        vertices[i + 1] *= scale;
-        vertices[i + 2] *= scale;
+        m_vertices[i] *= scale;
+        m_vertices[i + 1] *= scale;
+        m_vertices[i + 2] *= scale;
 
         // for interleaved array
-        interleavedVertices[j] *= scale;
-        interleavedVertices[j + 1] *= scale;
-        interleavedVertices[j + 2] *= scale;
+        m_interleavedVertices[j] *= scale;
+        m_interleavedVertices[j + 1] *= scale;
+        m_interleavedVertices[j + 2] *= scale;
     }
 }
 
@@ -86,15 +93,15 @@ std::vector<float> Sphere::computeVertices()
     // the first top vertex (0, 0, r)
     vertices[0] = 0;
     vertices[1] = 0;
-    vertices[2] = radius;
+    vertices[2] = m_radius;
 
     // 10 vertices at 2nd and 3rd rows
     for (int i = 1; i <= 5; ++i) {
         i1 = i * 3; // for 2nd row
         i2 = (i + 5) * 3; // for 3rd row
 
-        z = radius * sinf(V_ANGLE); // elevaton
-        xy = radius * cosf(V_ANGLE);
+        z = m_radius * sinf(V_ANGLE); // elevaton
+        xy = m_radius * cosf(V_ANGLE);
 
         vertices[i1] = xy * cosf(hAngle1); // x
         vertices[i2] = xy * cosf(hAngle2);
@@ -112,7 +119,7 @@ std::vector<float> Sphere::computeVertices()
     i1 = 11 * 3;
     vertices[i1] = 0;
     vertices[i1 + 1] = 0;
-    vertices[i1 + 2] = -radius;
+    vertices[i1 + 2] = -m_radius;
 
     return vertices;
 }
@@ -130,11 +137,11 @@ void Sphere::buildVertices()
     std::vector<float> tmpVertices = computeVertices();
 
     // clear memory of prev arrays
-    std::vector<float>().swap(vertices);
-    std::vector<float>().swap(normals);
-    std::vector<float>().swap(texCoords);
-    std::vector<unsigned int>().swap(indices);
-    std::vector<unsigned int>().swap(lineIndices);
+    std::vector<float>().swap(m_vertices);
+    std::vector<float>().swap(m_normals);
+    std::vector<float>().swap(m_texCoords);
+    std::vector<unsigned int>().swap(m_indices);
+    std::vector<unsigned int>().swap(m_lineIndices);
 
     float *v0, *v1, *v2, *v3, *v4, *v11; // vertex positions
     float n[3]; // face normal
@@ -206,6 +213,7 @@ void Sphere::buildVertices()
         index += 12;
     }
 
+    subdivideVertices();
     // generate interleaved vertex array as well
     buildInterleavedVertices();
 }
@@ -214,91 +222,91 @@ void Sphere::buildVertices()
 // stride must be 32 bytes
 void Sphere::buildInterleavedVertices()
 {
-    std::vector<float>().swap(interleavedVertices);
+    std::vector<float>().swap(m_interleavedVertices);
 
     std::size_t i, j;
-    std::size_t count = vertices.size();
+    std::size_t count = m_vertices.size();
     for (i = 0, j = 0; i < count; i += 3, j += 2) {
-        interleavedVertices.push_back(vertices[i]);
-        interleavedVertices.push_back(vertices[i + 1]);
-        interleavedVertices.push_back(vertices[i + 2]);
+        m_interleavedVertices.push_back(m_vertices[i]);
+        m_interleavedVertices.push_back(m_vertices[i + 1]);
+        m_interleavedVertices.push_back(m_vertices[i + 2]);
 
-        interleavedVertices.push_back(normals[i]);
-        interleavedVertices.push_back(normals[i + 1]);
-        interleavedVertices.push_back(normals[i + 2]);
+        m_interleavedVertices.push_back(m_normals[i]);
+        m_interleavedVertices.push_back(m_normals[i + 1]);
+        m_interleavedVertices.push_back(m_normals[i + 2]);
 
-        interleavedVertices.push_back(texCoords[j]);
-        interleavedVertices.push_back(texCoords[j + 1]);
+        m_interleavedVertices.push_back(m_texCoords[j]);
+        m_interleavedVertices.push_back(m_texCoords[j + 1]);
     }
 }
 
 // add 3 vertices to array
-void Sphere::addVertices(float v1[3], float v2[3], float v3[3])
+void Sphere::addVertices(const float v1[3], const float v2[3], const float v3[3])
 {
-    vertices.push_back(v1[0]); // x
-    vertices.push_back(v1[1]); // y
-    vertices.push_back(v1[2]); // z
-    vertices.push_back(v2[0]);
-    vertices.push_back(v2[1]);
-    vertices.push_back(v2[2]);
-    vertices.push_back(v3[0]);
-    vertices.push_back(v3[1]);
-    vertices.push_back(v3[2]);
+    m_vertices.push_back(v1[0]); // x
+    m_vertices.push_back(v1[1]); // y
+    m_vertices.push_back(v1[2]); // z
+    m_vertices.push_back(v2[0]);
+    m_vertices.push_back(v2[1]);
+    m_vertices.push_back(v2[2]);
+    m_vertices.push_back(v3[0]);
+    m_vertices.push_back(v3[1]);
+    m_vertices.push_back(v3[2]);
 }
 
 // add 3 normals to array
-void Sphere::addNormals(float n1[3], float n2[3], float n3[3])
+void Sphere::addNormals(const float n1[3], const float n2[3], const float n3[3])
 {
-    normals.push_back(n1[0]); // nx
-    normals.push_back(n1[1]); // ny
-    normals.push_back(n1[2]); // nz
-    normals.push_back(n2[0]);
-    normals.push_back(n2[1]);
-    normals.push_back(n2[2]);
-    normals.push_back(n3[0]);
-    normals.push_back(n3[1]);
-    normals.push_back(n3[2]);
+    m_normals.push_back(n1[0]); // nx
+    m_normals.push_back(n1[1]); // ny
+    m_normals.push_back(n1[2]); // nz
+    m_normals.push_back(n2[0]);
+    m_normals.push_back(n2[1]);
+    m_normals.push_back(n2[2]);
+    m_normals.push_back(n3[0]);
+    m_normals.push_back(n3[1]);
+    m_normals.push_back(n3[2]);
 }
 
 // add 3 texture coords to array
-void Sphere::addTexCoords(float t1[2], float t2[2], float t3[2])
+void Sphere::addTexCoords(const float t1[2], const float t2[2], const float t3[2])
 {
-    texCoords.push_back(t1[0]); // s
-    texCoords.push_back(t1[1]); // t
-    texCoords.push_back(t2[0]);
-    texCoords.push_back(t2[1]);
-    texCoords.push_back(t3[0]);
-    texCoords.push_back(t3[1]);
+    m_texCoords.push_back(t1[0]); // s
+    m_texCoords.push_back(t1[1]); // t
+    m_texCoords.push_back(t2[0]);
+    m_texCoords.push_back(t2[1]);
+    m_texCoords.push_back(t3[0]);
+    m_texCoords.push_back(t3[1]);
 }
 
 // add 3 indices to array
 void Sphere::addIndices(unsigned int i1, unsigned int i2, unsigned int i3)
 {
-    indices.push_back(i1);
-    indices.push_back(i2);
-    indices.push_back(i3);
+    m_indices.push_back(i1);
+    m_indices.push_back(i2);
+    m_indices.push_back(i3);
 }
 
 // add 6 edge lines to array starting from param (i)
 void Sphere::addLineIndices(unsigned int index)
 {
-    lineIndices.push_back(index); // (i, i+1)
-    lineIndices.push_back(index + 1);
-    lineIndices.push_back(index + 3); // (i+3, i+4)
-    lineIndices.push_back(index + 4);
-    lineIndices.push_back(index + 3); // (i+3, i+5)
-    lineIndices.push_back(index + 5);
-    lineIndices.push_back(index + 4); // (i+4, i+5)
-    lineIndices.push_back(index + 5);
-    lineIndices.push_back(index + 9); // (i+9, i+10)
-    lineIndices.push_back(index + 10);
-    lineIndices.push_back(index + 9); // (i+9, i+11)
-    lineIndices.push_back(index + 11);
+    m_lineIndices.push_back(index); // (i, i+1)
+    m_lineIndices.push_back(index + 1);
+    m_lineIndices.push_back(index + 3); // (i+3, i+4)
+    m_lineIndices.push_back(index + 4);
+    m_lineIndices.push_back(index + 3); // (i+3, i+5)
+    m_lineIndices.push_back(index + 5);
+    m_lineIndices.push_back(index + 4); // (i+4, i+5)
+    m_lineIndices.push_back(index + 5);
+    m_lineIndices.push_back(index + 9); // (i+9, i+10)
+    m_lineIndices.push_back(index + 10);
+    m_lineIndices.push_back(index + 9); // (i+9, i+11)
+    m_lineIndices.push_back(index + 11);
 }
 
 // return face normal of a triangle v1-v2-v3
 // if a triangle has no surface (normal length = 0), then return a zero vector
-void Sphere::computeFaceNormal(float v1[3], float v2[3], float v3[3], float n[3])
+void Sphere::computeFaceNormal(const float v1[3], const float v2[3], const float v3[3], float n[3])
 {
 
     // default return value (0, 0, 0)
@@ -327,4 +335,99 @@ void Sphere::computeFaceNormal(float v1[3], float v2[3], float v3[3], float n[3]
         n[1] = ny * lengthInv;
         n[2] = nz * lengthInv;
     }
+}
+
+void Sphere::subdivideVertices()
+{
+    std::vector<float> tmpVertices;
+    std::vector<float> tmpTexCoords;
+    std::vector<unsigned int> tmpIndices;
+    int indexCount;
+    const float *v1, *v2, *v3; // ptr to original vertices of a triangle
+    const float *t1, *t2, *t3; // ptr to original texcoords of a triangle
+    float newV1[3], newV2[3], newV3[3]; // new vertex positions
+    float newT1[2], newT2[2], newT3[2]; // new texture coords
+    float normal[3]; // new face normal
+    unsigned int index = 0; // new index value
+    int i, j;
+
+    // iteration
+    for (i = 1; i <= m_subdivision; ++i) {
+        // copy prev arrays
+        tmpVertices = m_vertices;
+        tmpTexCoords = m_texCoords;
+        tmpIndices = m_indices;
+
+        // clear prev arrays
+        m_vertices.clear();
+        m_normals.clear();
+        m_texCoords.clear();
+        m_indices.clear();
+        m_lineIndices.clear();
+
+        index = 0;
+        indexCount = (int)tmpIndices.size();
+        for (j = 0; j < indexCount; j += 3) {
+            // get 3 vertice and texcoords of a triangle
+            v1 = &tmpVertices[tmpIndices[j] * 3];
+            v2 = &tmpVertices[tmpIndices[j + 1] * 3];
+            v3 = &tmpVertices[tmpIndices[j + 2] * 3];
+            t1 = &tmpTexCoords[tmpIndices[j] * 2];
+            t2 = &tmpTexCoords[tmpIndices[j + 1] * 2];
+            t3 = &tmpTexCoords[tmpIndices[j + 2] * 2];
+
+            // get 3 new vertices by spliting half on each edge
+            computeHalfVertex(v1, v2, m_radius, newV1);
+            computeHalfVertex(v2, v3, m_radius, newV2);
+            computeHalfVertex(v1, v3, m_radius, newV3);
+            computeHalfTexCoord(t1, t2, newT1);
+            computeHalfTexCoord(t2, t3, newT2);
+            computeHalfTexCoord(t1, t3, newT3);
+
+            // add 4 new triangles
+            addVertices(v1, newV1, newV3);
+            addTexCoords(t1, newT1, newT3);
+            computeFaceNormal(v1, newV1, newV3, normal);
+            addNormals(normal, normal, normal);
+            addIndices(index, index + 1, index + 2);
+
+            addVertices(newV1, v2, newV2);
+            addTexCoords(newT1, t2, newT2);
+            computeFaceNormal(newV1, v2, newV2, normal);
+            addNormals(normal, normal, normal);
+            addIndices(index + 3, index + 4, index + 5);
+
+            addVertices(newV1, newV2, newV3);
+            addTexCoords(newT1, newT2, newT3);
+            computeFaceNormal(newV1, newV2, newV3, normal);
+            addNormals(normal, normal, normal);
+            addIndices(index + 6, index + 7, index + 8);
+
+            addVertices(newV3, newV2, v3);
+            addTexCoords(newT3, newT2, t3);
+            computeFaceNormal(newV3, newV2, v3, normal);
+            addNormals(normal, normal, normal);
+            addIndices(index + 9, index + 10, index + 11);
+
+            // next index
+            index += 12;
+        }
+    }
+}
+
+void Sphere::computeHalfTexCoord(const float t1[2], const float t2[2], float newT[2])
+{
+    newT[0] = (t1[0] + t2[0]) * 0.5f;
+    newT[1] = (t1[1] + t2[1]) * 0.5f;
+}
+
+void Sphere::computeHalfVertex(const float v1[3], const float v2[3], float length, float newV[3])
+{
+    newV[0] = v1[0] + v2[0];
+    newV[1] = v1[1] + v2[1];
+    newV[2] = v1[2] + v2[2];
+    float scale = length / sqrtf(newV[0] * newV[0] + newV[1] * newV[1] + newV[2] * newV[2]); // compute scale factor to resize vector
+    newV[0] *= scale;
+    newV[1] *= scale;
+    newV[2] *= scale;
 }

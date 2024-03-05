@@ -185,8 +185,9 @@ int main()
     float lightDir[3] = { -0.2f, -1.0f, -0.3f };
     float color[3] = { 1.0f, 0.3f, 0.4f };
     float radius { 1.0f };
+    int subdivides { 1 };
 
-    Sphere sphere { 1.0f };
+    Sphere sphere { 1.0f, subdivides };
     // render loop
     // -----------
     while (!glfwWindowShouldClose(window)) {
@@ -245,7 +246,6 @@ int main()
 
         // render containers
         sphere.draw();
-        sphere.setRadius(radius);
 
         // a lamp object is weird when we only have a directional light, don't
         // render the light object lightCubeShader.use();
@@ -261,9 +261,12 @@ int main()
 
         ImGui::Begin("Solar system control menu!");
         ImGui::Checkbox("Draw cube", &drawCube);
+        if (ImGui::SliderFloat("Radius", &radius, 0.1f, 10.0f))
+            sphere.setRadius(radius);
+        if (ImGui::SliderInt("Subdivides", &subdivides, 1, 7))
+            sphere.setSubdivision(subdivides);
         ImGui::SliderFloat3("Light direction", &lightDir[0], -1.0f, 1.0f);
         ImGui::ColorEdit3("Color", color);
-        ImGui::SliderFloat("Radius", &radius, 0.1f, 10.0f);
         ImGui::End();
 
         lightingShader.setVec3("material.color", color[0], color[1], color[2]);
