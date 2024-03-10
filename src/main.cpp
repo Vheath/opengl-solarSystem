@@ -116,14 +116,14 @@ int main()
     // load textures (we now use a utility function to keep the code more
     // organized)
     // -----------------------------------------------------------------------------
-    // unsigned int diffuseMap = loadTexture("../otherFiles/WoodenSteelContainer.png");
-    // unsigned int specularMap = loadTexture("../otherFiles/WoodenSteelContainerSpecular.png");
+    unsigned int diffuseMap = loadTexture("../otherFiles/Earth2.jpg");
+    unsigned int specularMap = loadTexture("../otherFiles/Earth2.jpg");
 
     // shader configuration
     // --------------------
     lightingShader.use();
-    // lightingShader.setInt("material.diffuse", 0);
-    // lightingShader.setInt("material.specular", 1);
+    lightingShader.setInt("material.diffuse", 0);
+    lightingShader.setInt("material.specular", 1);
 
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
@@ -184,11 +184,11 @@ int main()
         lightingShader.setMat4("model", model);
 
         // bind diffuse map
-        // glActiveTexture(GL_TEXTURE0);
-        // glBindTexture(GL_TEXTURE_2D, diffuseMap);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, diffuseMap);
         // // bind specular map
-        // glActiveTexture(GL_TEXTURE1);
-        // glBindTexture(GL_TEXTURE_2D, specularMap);
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, specularMap);
 
         if (drawSphere)
             sphere.draw();
@@ -219,15 +219,12 @@ int main()
 
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-        // glfw: swap buffers and poll IO events (keys pressed/released, mouse
-        // moved etc.)
-        // -------------------------------------------------------------------------------
+
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
 
-    // optional: de-allocate all resources once they've outlived their purpose:
-    // ------------------------------------------------------------------------
+    // de-allocate all resources once they've outlived their purpose:
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
     ImGui::DestroyContext();
@@ -235,8 +232,6 @@ int main()
     glDeleteVertexArrays(1, &lightCubeVAO);
     glDeleteBuffers(1, &VBO);
 
-    // glfw: terminate, clearing all previously allocated GLFW resources.
-    // ------------------------------------------------------------------
     glfwTerminate();
     return 0;
 }
@@ -334,11 +329,21 @@ unsigned int loadTexture(char const* path)
             GL_UNSIGNED_BYTE, data);
         glGenerateMipmap(GL_TEXTURE_2D);
 
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
-            GL_LINEAR_MIPMAP_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        //  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        //  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+        //  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
+        //      GL_LINEAR_MIPMAP_LINEAR);
+        //  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        // glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_TRUE);
+
+        // if wrap is true, the texture wraps over at the edges (repeat)
+        //       ... false, the texture ends at the edges (clamp)
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, false ? GL_REPEAT : GL_CLAMP_TO_EDGE);
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, false ? GL_REPEAT : GL_CLAMP_TO_EDGE);
+        // glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 
         stbi_image_free(data);
     } else {
