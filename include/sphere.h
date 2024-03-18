@@ -1,6 +1,7 @@
 #ifndef SPHERE_H
 #define SPHERE_H
 
+#include <glm/ext/vector_float2.hpp>
 #include <vector>
 class Sphere {
 public:
@@ -17,14 +18,13 @@ public:
     void computeFaceNormal(const float v1[3], const float v2[3], const float v3[3], float n[3]);
     void addLineIndices(unsigned int index);
     void addIndices(unsigned int i1, unsigned int i2, unsigned int i3);
-    void addTexCoords(const float t1[2], const float t2[2], const float t3[2]);
     void addNormals(const float n1[3], const float n2[3], const float n3[3]);
     void addVertices(const float v1[3], const float v2[3], const float v3[3]);
     void buildInterleavedVertices();
     void buildVertices();
     void subdivideVertices();
-    void computeHalfTexCoord(const float t1[2], const float t2[2], float newT[2]);
     void computeHalfVertex(const float v1[3], const float v2[3], float length, float newV[3]);
+    glm::vec2 generateTexCoord(const float nx, const float ny, const float nz);
 
 private:
     unsigned int m_VBO,
@@ -38,9 +38,7 @@ private:
     std::vector<float> m_vertices;
     std::vector<float> m_interleavedVertices;
     std::vector<float> m_normals;
-    std::vector<float> m_texCoords;
     std::vector<unsigned int> m_indices;
-    std::vector<unsigned int> m_lineIndices;
     constexpr static unsigned int m_tindices[20][3] = {
         { 1, 4, 0 }, { 4, 9, 0 }, { 4, 9, 5 }, { 8, 5, 4 }, { 1, 8, 4 },
         { 1, 10, 8 }, { 10, 3, 8 }, { 8, 3, 5 }, { 3, 2, 5 }, { 3, 7, 2 },

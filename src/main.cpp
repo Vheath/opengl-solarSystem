@@ -116,8 +116,8 @@ int main()
     // load textures (we now use a utility function to keep the code more
     // organized)
     // -----------------------------------------------------------------------------
-    unsigned int diffuseMap = loadTexture("../otherFiles/Earth2.jpg");
-    unsigned int specularMap = loadTexture("../otherFiles/Earth2.jpg");
+    unsigned int diffuseMap = loadTexture("../otherFiles/EarthTex.jpg");
+    unsigned int specularMap = loadTexture("../otherFiles/EarthTex.jpg");
 
     // shader configuration
     // --------------------
@@ -138,6 +138,7 @@ int main()
     int subdivides { 1 };
 
     Sphere sphere { 1.0f, subdivides };
+
     // render loop
     // -----------
     while (!glfwWindowShouldClose(window)) {
@@ -335,15 +336,17 @@ unsigned int loadTexture(char const* path)
         //      GL_LINEAR_MIPMAP_LINEAR);
         //  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+        // glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+        // glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
         // glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_TRUE);
 
         // if wrap is true, the texture wraps over at the edges (repeat)
         //       ... false, the texture ends at the edges (clamp)
-        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, false ? GL_REPEAT : GL_CLAMP_TO_EDGE);
-        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, false ? GL_REPEAT : GL_CLAMP_TO_EDGE);
-        // glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
         stbi_image_free(data);
     } else {
