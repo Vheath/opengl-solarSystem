@@ -350,6 +350,7 @@ void Sphere::subdivideVertices()
 
             // add 4 new triangles
             addVertices(v1, newV1, newV3);
+            computeFaceNormal(v1, newV1, newV3, normal);
             addNormals(normal, normal, normal);
             addIndices(index, index + 1, index + 2);
 
