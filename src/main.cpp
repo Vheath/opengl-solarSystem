@@ -114,8 +114,9 @@ int main()
     float lightDir[3] = { -0.2f, -1.0f, -0.3f };
     float color[3] = { 1.0f, 0.3f, 0.4f };
     float radius { 1.0f };
-    Sphere earth { 1.0f, 1 };
-    Sphere sun { 2.0f, 1 };
+    Sphere earth { lightingShader.ID, 1.0f, 1 };
+    Sphere sun { lightingShader.ID, 2.0f };
+    earth.setTranslate(glm::vec3(6.0f, 0.0f, 1.0f));
     // render loop
     while (!glfwWindowShouldClose(window)) {
         // input
@@ -129,7 +130,7 @@ int main()
         lightingShader.setVec3("viewPos", camera.Position);
 
         // light properties
-        lightingShader.setVec3("light.ambient", 0.1f, 0.1f, 0.1f);
+        lightingShader.setVec3("light.ambient", 0.2f, 0.2f, 0.2f);
         lightingShader.setVec3("light.diffuse", 0.7f, 0.7f, 0.7f);
         lightingShader.setVec3("light.specular", 1.0f, 1.0f, 1.0f);
 

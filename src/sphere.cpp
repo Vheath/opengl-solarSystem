@@ -3,18 +3,35 @@
 #include "include/sphere.h"
 #include <GLFW/glfw3.h>
 #include <cmath>
+#include <glm/ext/matrix_transform.hpp>
 #include <glm/fwd.hpp>
+#include <glm/gtc/quaternion.hpp>
+#include <glm/mat4x4.hpp>
 #include <math.h>
 #include <numbers>
 
-Sphere::Sphere(float radius, int subdivision)
+Sphere::Sphere(unsigned int ID, float radius, int subdivision)
     : m_subdivision(subdivision)
+    , m_shaderID(ID)
 {
     setRadius(radius);
 
     glGenVertexArrays(1, &m_VAO);
     glGenBuffers(1, &m_VBO);
-} // setters
+}
+
+// setters
+//
+void Sphere::SetShaderID(unsigned int ID)
+{
+    m_shaderID = ID;
+}
+
+void Sphere::setTranslate(glm::vec3 vec)
+{
+    m_transVec = vec;
+}
+
 void Sphere::setRadius(float radius)
 {
     m_radius = radius;
@@ -39,7 +56,7 @@ void Sphere::setSubdivision(int subdivision)
 }
 
 // draw an icosahedron
-void Sphere::draw() const
+void Sphere::draw()
 {
 
     glBindVertexArray(m_VAO);
@@ -54,6 +71,12 @@ void Sphere::draw() const
 
     glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)+(6 * sizeof(float)));
     glEnableVertexAttribArray(2);
+
+    m_model = glm::mat4(1.0f);
+    m_model = glm::translate(m_model, m_transVec);
+
+    glUniformMatrix4fv(glGetUniformLocation(m_shaderID, "model"), 1, GL_FALSE,
+        &m_model[0][0]);
 
     glDrawElements(GL_TRIANGLES, (unsigned int)m_indices.size(), GL_UNSIGNED_INT, m_indices.data());
 }
@@ -143,7 +166,6 @@ void Sphere::buildVertices()
     std::vector<float>().swap(m_vertices);
     std::vector<float>().swap(m_normals);
     std::vector<unsigned int>().swap(m_indices);
-
     float *v0, *v1, *v2, *v3, *v4, *v11; // vertex positions
     float n[3]; // face normal
     float t0[2], t1[2], t2[2], t3[2], t4[2], t11[2]; // texCoords
@@ -383,4 +405,14 @@ void Sphere::computeHalfVertex(const float v1[3], const float v2[3], float lengt
     newV[0] *= scale;
     newV[1] *= scale;
     newV[2] *= scale;
+}
+
+unsigned int Sphere::getShaderID()
+{
+    return m_shaderID;
+}
+
+glm::mat4 Sphere::getModelMat()
+{
+    return m_model;
 }

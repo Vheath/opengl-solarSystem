@@ -13,6 +13,7 @@ add_executable(
     ${PROJECT_SOURCE_DIR}/src/shader.cpp
     ${PROJECT_SOURCE_DIR}/src/camera.cpp
     ${PROJECT_SOURCE_DIR}/src/sphere.cpp
+    ${PROJECT_SOURCE_DIR}/src/planet.cpp
 )
 target_compile_features(out PRIVATE cxx_std_20)
 
