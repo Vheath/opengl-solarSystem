@@ -25,16 +25,14 @@ public:
     void subdivideVertices();
     void computeHalfVertex(const float v1[3], const float v2[3], float length, float newV[3]);
     glm::vec2 generateTexCoord(const float nx, const float ny, const float nz);
+    int m_subdivision;
 
 private:
     unsigned int m_VBO,
         m_normVBO,
         m_VAO;
-    float m_radius;
     float m_edgeLength;
-
-    int m_subdivision;
-
+    float m_radius;
     std::vector<float> m_vertices;
     std::vector<float> m_interleavedVertices;
     std::vector<float> m_normals;

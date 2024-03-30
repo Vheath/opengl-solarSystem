@@ -92,8 +92,11 @@ int main()
 
     // load textures (we now use a utility function to keep the code more
     // organized)
-    unsigned int diffuseMap = loadTexture("../otherFiles/EarthTex.jpg");
-    unsigned int specularMap = loadTexture("../otherFiles/EarthTex.jpg");
+    unsigned int diffuseEarthMap = loadTexture("../otherFiles/EarthTex.jpg");
+    unsigned int specularEarthMap = loadTexture("../otherFiles/EarthTex.jpg");
+
+    unsigned int diffuseSunMap = loadTexture("../otherFiles/SunTex.png");
+    unsigned int specularSunMap = loadTexture("../otherFiles/SunTex.png");
 
     // shader configuration
     lightingShader.use();
@@ -111,8 +114,8 @@ int main()
     float lightDir[3] = { -0.2f, -1.0f, -0.3f };
     float color[3] = { 1.0f, 0.3f, 0.4f };
     float radius { 1.0f };
-    int subdivides { 1 };
-    Sphere sphere { 1.0f, subdivides };
+    Sphere earth { 1.0f, 1 };
+    Sphere sun { 2.0f, 1 };
     // render loop
     while (!glfwWindowShouldClose(window)) {
         // input
@@ -143,23 +146,37 @@ int main()
         glm::mat4 model = glm::mat4(1.0f);
         lightingShader.setMat4("model", model);
 
+        lightingShader.setInt("material.diffuse", 0);
+        lightingShader.setInt("material.specular", 1);
         // bind diffuse map
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, diffuseMap);
+        glBindTexture(GL_TEXTURE_2D, diffuseEarthMap);
         // // bind specular map
         glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, specularMap);
+        glBindTexture(GL_TEXTURE_2D, specularEarthMap);
 
-        if (drawSphere)
-            sphere.draw();
+        earth.draw();
+
+        lightingShader.setInt("material.diffuse", 2);
+        lightingShader.setInt("material.specular", 3);
+        // bind diffuse map
+        glActiveTexture(GL_TEXTURE2);
+        glBindTexture(GL_TEXTURE_2D, diffuseSunMap);
+        // // bind specular map
+        glActiveTexture(GL_TEXTURE3);
+        glBindTexture(GL_TEXTURE_2D, specularSunMap);
+
+        sun.draw();
 
         ImGui::Begin("Solar system control menu!");
         ImGui::Checkbox("Draw sphere", &drawSphere);
 
         if (ImGui::SliderFloat("Radius", &radius, 0.1f, 10.0f))
-            sphere.setRadius(radius);
-        if (ImGui::SliderInt("Subdivides", &subdivides, 1, 7))
-            sphere.setSubdivision(subdivides);
+            earth.setRadius(radius);
+        if (ImGui::SliderInt("Earth Subdivides", &earth.m_subdivision, 1, 9))
+            earth.buildVertices();
+        if (ImGui::SliderInt("Sun Subdivides", &sun.m_subdivision, 1, 9))
+            sun.buildVertices();
         ImGui::SliderFloat3("Light direction", &lightDir[0], -1.0f, 1.0f);
         ImGui::ColorEdit3("Color", color);
         ImGui::End();

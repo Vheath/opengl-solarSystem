@@ -35,7 +35,6 @@ void Sphere::setEdgeLength(float edge)
 void Sphere::setSubdivision(int subdivision)
 {
     m_subdivision = subdivision;
-
     buildVertices();
 }
 
