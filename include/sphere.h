@@ -14,8 +14,12 @@ public:
     void setEdgeLength(float edge);
     void setSubdivision(int subdivision);
     void setTranslate(glm::vec3 vec);
+    void setRotationVec(glm::vec3 vec);
+    void setRotationRad(float rad);
+
     unsigned int getShaderID();
     glm::mat4 getModelMat();
+    glm::vec3 getTranslate();
     void updateRadius();
     std::vector<float> computeVertices();
     void computeFaceNormal(const float v1[3], const float v2[3], const float v3[3], float n[3]);
@@ -43,9 +47,11 @@ private:
     std::vector<float> m_interleavedVertices;
     std::vector<float> m_normals;
     std::vector<unsigned int> m_indices;
+    float m_rotRad {};
 
     glm::mat4 m_model = glm::mat4(1.0f);
     glm::vec3 m_transVec = glm::vec3(0.0f);
+    glm::vec3 m_rotateVec = glm::vec3(1.0f);
 };
 
 #endif // !

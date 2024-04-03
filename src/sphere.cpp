@@ -55,6 +55,16 @@ void Sphere::setSubdivision(int subdivision)
     buildVertices();
 }
 
+void Sphere::setRotationVec(glm::vec3 vec)
+{
+    m_rotateVec = vec;
+}
+
+void Sphere::setRotationRad(float rad)
+{
+    m_rotRad = rad;
+}
+
 // draw an icosahedron
 void Sphere::draw()
 {
@@ -72,8 +82,11 @@ void Sphere::draw()
     glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)+(6 * sizeof(float)));
     glEnableVertexAttribArray(2);
 
+    float angle = glfwGetTime();
+
     m_model = glm::mat4(1.0f);
     m_model = glm::translate(m_model, m_transVec);
+    m_model = glm::rotate(m_model, m_rotRad, m_rotateVec);
 
     glUniformMatrix4fv(glGetUniformLocation(m_shaderID, "model"), 1, GL_FALSE,
         &m_model[0][0]);
@@ -410,6 +423,11 @@ void Sphere::computeHalfVertex(const float v1[3], const float v2[3], float lengt
 unsigned int Sphere::getShaderID()
 {
     return m_shaderID;
+}
+
+glm::vec3 Sphere::getTranslate()
+{
+    return m_transVec;
 }
 
 glm::mat4 Sphere::getModelMat()
