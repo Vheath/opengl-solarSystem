@@ -114,12 +114,9 @@ int main()
 
     float lightDir[3] = { -0.2f, -1.0f, -0.3f };
     float color[3] = { 1.0f, 0.3f, 0.4f };
-    float radius { 1.0f };
     float timeMult { 1.0f };
-    Sphere earth { lightingShader.ID, 1.0f, 1 };
     Sphere sun { lightingShader.ID, 2.0f };
-    Planet planet { lightingShader.ID, 11, 11.0f, 33.0f, 2.0f, 7 };
-    earth.setTranslate(glm::vec3(6.0f, 0.0f, 1.0f));
+    Planet earth { lightingShader.ID, 15, 365, 24.0f, 2.0f, 7 };
     // render loop
     while (!glfwWindowShouldClose(window)) {
         // input
@@ -159,7 +156,7 @@ int main()
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, specularEarthMap);
 
-        planet.draw();
+        earth.draw();
 
         lightingShader.setInt("material.diffuse", 2);
         lightingShader.setInt("material.specular", 3);
@@ -175,10 +172,8 @@ int main()
         ImGui::Begin("Solar system control menu!");
         ImGui::Checkbox("Draw sphere", &drawSphere);
 
-        if (ImGui::SliderFloat("Radius", &radius, 0.1f, 10.0f))
-            earth.setRadius(radius);
         if (ImGui::SliderFloat("Time multiplier", &timeMult, 1.0f, 450000000.0f))
-            planet.setTimeMultiplier(timeMult);
+            earth.setTimeMultiplier(timeMult);
         ImGui::SliderFloat3("Light direction", &lightDir[0], -1.0f, 1.0f);
         ImGui::ColorEdit3("Color", color);
         ImGui::End();
