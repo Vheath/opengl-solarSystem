@@ -172,7 +172,7 @@ int main()
         ImGui::Begin("Solar system control menu!");
         ImGui::Checkbox("Draw sphere", &drawSphere);
 
-        if (ImGui::SliderFloat("Time multiplier", &timeMult, 1.0f, 450000000.0f))
+        if (ImGui::SliderFloat("Time multiplier", &timeMult, 1.0f, 10000000.0f))
             earth.setTimeMultiplier(timeMult);
         ImGui::SliderFloat3("Light direction", &lightDir[0], -1.0f, 1.0f);
         ImGui::ColorEdit3("Color", color);

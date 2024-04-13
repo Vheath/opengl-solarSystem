@@ -11,7 +11,7 @@ public:
 private:
     Sphere m_sphere;
     float m_timeMult;
-    float m_rotationSpeedInHr;
+    float m_rotationTimeInHr;
     int m_yearLength;
     int m_distanceFromSun;
 };
