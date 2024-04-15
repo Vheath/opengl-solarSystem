@@ -86,10 +86,10 @@ int main()
     glEnable(GL_DEPTH_TEST);
 
     // build and compile shaders
-    Shader lightCubeShader("../src/ShadersGLSL/shaderLightSource.vert",
-        "../src/ShadersGLSL/shaderLightSource.frag");
-    Shader lightingShader("../src/ShadersGLSL/lightShader.vert",
-        "../src/ShadersGLSL/lightShader.frag");
+
+    Shader sunShader("../src/ShadersGLSL/sunShader.vert", "../src/ShadersGLSL/sunShader.frag");
+
+    Shader lightingShader("../src/ShadersGLSL/lightShader.vert", "../src/ShadersGLSL/lightShader.frag");
 
     // load textures (we now use a utility function to keep the code more
     // organized)
@@ -112,10 +112,10 @@ int main()
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init("#version 330");
 
-    float lightDir[3] = { -0.2f, -1.0f, -0.3f };
+    float lightPos[3] = { 0.0f, 0.0f, 0.0f };
     float color[3] = { 1.0f, 0.3f, 0.4f };
     float timeMult { 1.0f };
-    Sphere sun { lightingShader.ID, 2.0f };
+    Sphere sun { sunShader.ID, 2.0f };
     Planet earth { lightingShader.ID, 15, 365, 24.0f, 2.0f, 7 };
     // render loop
     while (!glfwWindowShouldClose(window)) {
@@ -126,7 +126,7 @@ int main()
 
         // be sure to activate shader when setting uniforms/drawing objects
         lightingShader.use();
-        lightingShader.setVec3("light.direction", lightDir[0], lightDir[1], lightDir[2]);
+        lightingShader.setVec3("light.position", lightPos[0], lightPos[1], lightPos[2]);
         lightingShader.setVec3("viewPos", camera.Position);
 
         // light properties
@@ -158,8 +158,10 @@ int main()
 
         earth.draw();
 
-        lightingShader.setInt("material.diffuse", 2);
-        lightingShader.setInt("material.specular", 3);
+        sunShader.use();
+
+        sunShader.setInt("material.diffuse", 2);
+        sunShader.setInt("material.specular", 3);
         // bind diffuse map
         glActiveTexture(GL_TEXTURE2);
         glBindTexture(GL_TEXTURE_2D, diffuseSunMap);
@@ -167,6 +169,8 @@ int main()
         glActiveTexture(GL_TEXTURE3);
         glBindTexture(GL_TEXTURE_2D, specularSunMap);
 
+        sunShader.setMat4("projection", projection);
+        sunShader.setMat4("view", view);
         sun.draw();
 
         ImGui::Begin("Solar system control menu!");
@@ -174,7 +178,7 @@ int main()
 
         if (ImGui::SliderFloat("Time multiplier", &timeMult, 1.0f, 10000000.0f))
             earth.setTimeMultiplier(timeMult);
-        ImGui::SliderFloat3("Light direction", &lightDir[0], -1.0f, 1.0f);
+        ImGui::SliderFloat3("Light position", &lightPos[0], -1.0f, 1.0f);
         ImGui::ColorEdit3("Color", color);
         ImGui::End();
 
