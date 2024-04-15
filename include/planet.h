@@ -15,5 +15,11 @@ private:
     float m_rotationTimeInHr;
     int m_yearLength;
     float m_distanceFromSun;
+    float m_consYear;
+    float currentFrame {};
+    float deltaTime {};
+    float lastFrame {};
+    double seconds {};
+    float rotationInSec {};
 };
 #endif //

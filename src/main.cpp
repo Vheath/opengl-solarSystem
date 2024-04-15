@@ -115,18 +115,19 @@ int main()
     //-----------------------------
     // Planets Declaration
 
-    std::vector<Planet> planetList;
-    planetList.push_back(Planet(lightingShader.ID, 5.8f, 88, 59 * 24.0f, 0.24f, 7)); // Mercury
-    planetList.push_back(Planet(lightingShader.ID, 15, 365, 24.0f, 0.63f, 7)); // Venera
-    planetList.push_back(Planet(lightingShader.ID, 15, 365, 24.0f, 0.63f, 7)); // Earth
+    // std::vector<Planet> planetList;
+    // planetList.push_back(Planet(lightingShader.ID, 5.8f, 65, 59 * 24.0f, 0.24f, 7)); // Mercury
+    // planetList.push_back(Planet(lightingShader.ID, 15, 88, 24.0f, 0.63f, 7)); // Earth
+    Planet earth { lightingShader.ID, 15, 365, 24.0f, 0.63f, 7 };
+    Planet mercury { lightingShader.ID, 5.8f, 88, 59 * 24.0f, 0.24f, 6 };
 
     //---------------------------------
 
     float lightPos[3] = { 0.0f, 0.0f, 0.0f };
     float color[3] = { 1.0f, 0.3f, 0.4f };
     Sphere sun { sunShader.ID, 2.0f };
-    Satellite moon { satelliteShader.ID, planetList[2].getTranslate(), 1.5f, 27, 27 * 24, 0.087f, glm::vec3(0.4f) };
-    // render loop
+    Satellite moon { satelliteShader.ID, earth.getTranslate(), 1.5f, 27, 27 * 24, 0.087f, glm::vec3(0.4f) };
+    //  render loop
     while (!glfwWindowShouldClose(window)) {
         // input
         processInput(window);
@@ -165,14 +166,14 @@ int main()
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, specularEarthMap);
 
-        planetList[2].draw();
+        earth.draw();
 
         lightingShader.setInt("material.diffuse", 4);
         lightingShader.setInt("material.specular", 4);
         glActiveTexture(GL_TEXTURE4);
         glBindTexture(GL_TEXTURE_2D, diffuseMercuryMap);
 
-        planetList[0].draw();
+        mercury.draw();
 
         sunShader.use();
 

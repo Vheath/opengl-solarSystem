@@ -12,6 +12,7 @@ Planet::Planet(unsigned int shaderID, float distanceFromSun, int yearInEarthDays
 {
     m_sphere.setTranslate(glm::vec3(distanceFromSun, 0.0f, 0.0f));
     m_sphere.setRotationVec(glm::vec3(0.0f, 1.0f, 0.0f));
+    m_consYear = (m_yearLength * 24 * 60 * 60) / (2 * std::numbers::pi); // 365 days(one earth year) / 2pi(one rotation)
 }
 
 glm::vec3* Planet::getTranslate()
@@ -21,18 +22,12 @@ glm::vec3* Planet::getTranslate()
 
 void Planet::draw()
 {
-    static float currentFrame {};
-    static float deltaTime {};
-    static float lastFrame {};
-    static double seconds {};
-    static float rotationInSec {};
-    static float consYear = m_yearLength * 24 * 60 * 60 / (2 * std::numbers::pi); // 365 days(one earth year) / 2pi(one rotation)
 
     currentFrame = static_cast<float>(glfwGetTime());
     deltaTime = currentFrame - lastFrame;
     lastFrame = currentFrame;
 
-    seconds += (deltaTime * timeMult) / consYear;
+    seconds += (deltaTime * timeMult) / m_consYear;
 
     seconds = std::fmod(seconds, std::numbers::pi * 2);
 

@@ -82,7 +82,6 @@ void Sphere::draw()
     glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)+(6 * sizeof(float)));
     glEnableVertexAttribArray(2);
 
-    float angle = glfwGetTime();
 
     m_model = glm::mat4(1.0f);
     m_model = glm::translate(m_model, m_transVec);
