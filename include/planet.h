@@ -1,18 +1,19 @@
 #ifndef PLANET_H
 #define PLANET_H
+#include "include/common.h"
 #include "include/sphere.h"
 
 class Planet {
 public:
-    Planet(unsigned int ShaderID, int distanceFromSun, int yearInEarthDays, float rotationSpeedInHr, float radius, int subdivision = 4);
+    Planet(unsigned int ShaderID, float distanceFromSun, int yearInEarthDays, float rotationSpeedInHr, float radius, int subdivision = 4);
     void draw();
-    void setTimeMultiplier(float timeMult); // more timeMult => faster earth rotation
+
+    glm::vec3* getTranslate();
 
 private:
     Sphere m_sphere;
-    float m_timeMult;
     float m_rotationTimeInHr;
     int m_yearLength;
-    int m_distanceFromSun;
+    float m_distanceFromSun;
 };
 #endif //

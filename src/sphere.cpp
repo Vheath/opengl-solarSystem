@@ -425,9 +425,9 @@ unsigned int Sphere::getShaderID()
     return m_shaderID;
 }
 
-glm::vec3 Sphere::getTranslate()
+glm::vec3* Sphere::getTranslate()
 {
-    return m_transVec;
+    return &m_transVec;
 }
 
 glm::mat4 Sphere::getModelMat()

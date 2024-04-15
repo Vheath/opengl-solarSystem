@@ -1,26 +1,22 @@
-#include "include/planet.h"
+#include "include/satellite.h"
 #include <GLFW/glfw3.h>
-#include <cmath>
-#include <iostream>
 #include <numbers>
 
-Planet::Planet(unsigned int shaderID, float distanceFromSun, int yearInEarthDays, float rotationTimeInHr, float radius, int subdivision)
-    : m_distanceFromSun(distanceFromSun)
+Satellite::Satellite(unsigned int shaderID, glm::vec3* planetPos,
+    float distanceInKm, int yearInEarthDays, float rotationTimeInHr, float radius, glm::vec3 color)
+    : m_planetPos(planetPos)
+    , m_color(color)
+    , m_distanceInKm(distanceInKm)
+    , m_sphere(shaderID, radius, 5)
     , m_yearLength(yearInEarthDays)
     , m_rotationTimeInHr(rotationTimeInHr)
-    , m_sphere(shaderID, radius, subdivision)
 {
-    m_sphere.setTranslate(glm::vec3(distanceFromSun, 0.0f, 0.0f));
-    m_sphere.setRotationVec(glm::vec3(0.0f, 1.0f, 0.0f));
 }
 
-glm::vec3* Planet::getTranslate()
+void Satellite::draw()
 {
-    return m_sphere.getTranslate();
-}
+    glUniform3f(glGetUniformLocation(m_sphere.getShaderID(), "color"), m_color.x, m_color.y, m_color.z);
 
-void Planet::draw()
-{
     static float currentFrame {};
     static float deltaTime {};
     static float lastFrame {};
@@ -39,6 +35,6 @@ void Planet::draw()
     rotationInSec += deltaTime * timeMult * 2 * std::numbers::pi / (m_rotationTimeInHr * 3600);
     m_sphere.setRotationRad(rotationInSec);
 
-    m_sphere.setTranslate(glm::vec3(m_distanceFromSun * std::sin(seconds), 0.0f, m_distanceFromSun * std::cos(seconds)));
+    m_sphere.setTranslate(glm::vec3(m_planetPos->x + m_distanceInKm * std::sin(seconds), 0.0f, m_planetPos->z + m_distanceInKm * std::cos(seconds)));
     m_sphere.draw();
 }

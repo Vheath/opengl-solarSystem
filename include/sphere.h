@@ -19,14 +19,14 @@ public:
 
     unsigned int getShaderID();
     glm::mat4 getModelMat();
-    glm::vec3 getTranslate();
+    glm::vec3* getTranslate();
+
     void updateRadius();
     std::vector<float> computeVertices();
     void computeFaceNormal(const float v1[3], const float v2[3], const float v3[3], float n[3]);
     void addLineIndices(unsigned int index);
     void addIndices(unsigned int i1, unsigned int i2, unsigned int i3);
-    void addNormals(const float n1[3], const float n2[3], const float n3[3]);
-    void addVertices(const float v1[3], const float v2[3], const float v3[3]);
+    void addNormals(const float n1[3], const float n2[3], const float n3[3]); void addVertices(const float v1[3], const float v2[3], const float v3[3]);
     void buildInterleavedVertices();
     void buildVertices();
     void subdivideVertices();
