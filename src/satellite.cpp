@@ -3,7 +3,7 @@
 #include <numbers>
 
 Satellite::Satellite(unsigned int shaderID, glm::vec3* planetPos,
-    float distanceInKm, int yearInEarthDays, float rotationTimeInHr, float radius, glm::vec3 color)
+    float distanceInKm, float yearInEarthDays, float rotationTimeInHr, float radius, glm::vec3 color)
     : m_planetPos(planetPos)
     , m_color(color)
     , m_distanceInKm(distanceInKm)
@@ -16,13 +16,6 @@ Satellite::Satellite(unsigned int shaderID, glm::vec3* planetPos,
 void Satellite::draw()
 {
     glUniform3f(glGetUniformLocation(m_sphere.getShaderID(), "color"), m_color.x, m_color.y, m_color.z);
-
-    static float currentFrame {};
-    static float deltaTime {};
-    static float lastFrame {};
-    static double seconds {};
-    static float rotationInSec {};
-    static float consYear = m_yearLength * 24 * 60 * 60 / (2 * std::numbers::pi); // 365 days(one earth year) / 2pi(one rotation)
 
     currentFrame = static_cast<float>(glfwGetTime());
     deltaTime = currentFrame - lastFrame;

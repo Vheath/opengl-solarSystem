@@ -50,6 +50,17 @@ struct PlanetBody {
     unsigned int texGL;
     std::vector<Satellite> satVec;
 };
+enum PlanetNum {
+    mercury = 0,
+    venus,
+    earth,
+    mars,
+    jupiter,
+    saturn,
+    uranus,
+    neptune
+
+};
 
 int main()
 {
@@ -97,12 +108,23 @@ int main()
 
     // load textures (we now use a utility function to keep the code more
     // organized)
-    unsigned int diffuseEarthMap = loadTexture("../otherFiles/EarthTex.jpg");
+    unsigned int diffuseSunMap = loadTexture("../otherFiles/sunmap.png");
 
-    unsigned int diffuseSunMap = loadTexture("../otherFiles/SunTex.png");
+    unsigned int diffuseMercuryMap = loadTexture("../otherFiles/mercurymap.jpeg");
 
-    unsigned int diffuseMercuryMap = loadTexture("../otherFiles/mercury.jpeg");
+    unsigned int diffuseVenusMap = loadTexture("../otherFiles/venusmap.jpg");
 
+    unsigned int diffuseEarthMap = loadTexture("../otherFiles/earthmap.jpg");
+
+    unsigned int diffuseMarsMap = loadTexture("../otherFiles/marsmap.jpg");
+
+    unsigned int diffuseJupiterMap = loadTexture("../otherFiles/jupitermap.jpg");
+
+    unsigned int diffuseSaturnMap = loadTexture("../otherFiles/saturnmap.jpg");
+
+    unsigned int difuuseUranusMap = loadTexture("../otherFiles/uranusmap.jpg");
+
+    unsigned int difuuseNeptuneMap = loadTexture("../otherFiles/neptunemap.jpg");
     // shader configuration
     lightingShader.use();
 
@@ -116,27 +138,44 @@ int main()
 
     //-----------------------------
     // Planets Declaration
-    // нужно организовать текстуры и планеты. Создам структуру хранящую планету, ее спутники, и ее текстуру
-
-    // std::vector<Planet> planetList;
-    // planetList.push_back(Planet(lightingShader.ID, 5.8f, 65, 59 * 24.0f, 0.24f, 7)); // Mercury
-    // planetList.push_back(Planet(lightingShader.ID, 15, 88, 24.0f, 0.63f, 7)); // Earth
-    Planet earth { lightingShader.ID, 15, 365, 24.0f, 0.63f, 7 };
-    // Planet mercury { lightingShader.ID, 5.8f, 88, 59 * 24.0f, 0.24f, 6 };
-
-    //---------------------------------
-
     float lightPos[3] = { 0.0f, 0.0f, 0.0f };
     float color[3] = { 1.0f, 0.3f, 0.4f };
     Sphere sun { sunShader.ID, 2.0f };
     std::vector<PlanetBody> planetVec;
+    // Mercury first
+    planetVec.push_back({ { lightingShader.ID, 5.8f, 88, 59 * 24.0f, 0.24f, 6 },
+        diffuseMercuryMap,
+        GL_TEXTURE1 });
+
+    // Venus third
+    //
+    planetVec.push_back({ { lightingShader.ID, 10.8f, 225, 243 * 24.0f, 0.60f, 6 },
+        diffuseVenusMap,
+        GL_TEXTURE2 });
+
+    // Earth third
     planetVec.push_back({
         { lightingShader.ID, 15, 365, 24.0f, 0.63f, 7 },
         diffuseEarthMap,
-        GL_TEXTURE0,
+        GL_TEXTURE3,
     });
-    planetVec[0].satVec.push_back({ satelliteShader.ID, planetVec[0].planet.getTranslate(), 1.5f, 27, 27 * 24, 0.087f, glm::vec3(0.4f) });
+    planetVec[earth].satVec.push_back({ satelliteShader.ID, planetVec[earth].planet.getTranslate(), 1.5f, 27, 27 * 24, 0.087f, glm::vec3(0.4f) });
 
+    // Mars fourth
+    planetVec.push_back({ { lightingShader.ID, 22.8f, 687, 24.8f, 0.34f, 6 },
+        diffuseMarsMap,
+        GL_TEXTURE4 });
+    // Deimos and Phobos
+    planetVec[mars].satVec.push_back({ satelliteShader.ID, planetVec[mars].planet.getTranslate(), 1.3f, 1.264f, 30.2f, 0.067f, glm::vec3(0.4f) });
+    planetVec[mars].satVec.push_back({ satelliteShader.ID, planetVec[mars].planet.getTranslate(), 0.6f, 0.31f, 7.6f, 0.087f, glm::vec3(0.4f) });
+
+    // Jupiter fifth 50(70) 3.21(7.21)
+    planetVec.push_back({ { lightingShader.ID, 50.8f, 4380, 9.8f, 3.21f, 6 },
+        diffuseJupiterMap,
+        GL_TEXTURE5 });
+
+
+    //-----------------------------
     //  render loop
     while (!glfwWindowShouldClose(window)) {
         // input
@@ -145,7 +184,7 @@ int main()
         frameStart();
 
         glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom),
-            (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+            (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 300.0f);
         glm::mat4 view = camera.GetViewMatrix();
         glm::mat4 model = glm::mat4(1.0f);
 
@@ -170,8 +209,8 @@ int main()
             lightingShader.setMat4("model", model);
             glActiveTexture(planetVec[i].texGL);
             glBindTexture(GL_TEXTURE_2D, planetVec[i].texture);
-            lightingShader.setInt("material.diffuse", 0);
-            lightingShader.setInt("material.specular", 0);
+            lightingShader.setInt("material.diffuse", planetVec[i].texture - 1);
+            lightingShader.setInt("material.specular", planetVec[i].texture - 1);
             planetVec[i].planet.draw();
 
             // shader specifically for rendering satellites, because they're without texture
