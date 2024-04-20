@@ -119,7 +119,7 @@ int main()
     // planetList.push_back(Planet(lightingShader.ID, 5.8f, 65, 59 * 24.0f, 0.24f, 7)); // Mercury
     // planetList.push_back(Planet(lightingShader.ID, 15, 88, 24.0f, 0.63f, 7)); // Earth
     Planet earth { lightingShader.ID, 15, 365, 24.0f, 0.63f, 7 };
-    Planet mercury { lightingShader.ID, 5.8f, 88, 59 * 24.0f, 0.24f, 6 };
+    // Planet mercury { lightingShader.ID, 5.8f, 88, 59 * 24.0f, 0.24f, 6 };
 
     //---------------------------------
 
@@ -157,14 +157,11 @@ int main()
         glm::mat4 model = glm::mat4(1.0f);
         lightingShader.setMat4("model", model);
 
-        lightingShader.setInt("material.diffuse", 0);
-        lightingShader.setInt("material.specular", 1);
-        // bind diffuse map
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, diffuseEarthMap);
-        // // bind specular map
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, specularEarthMap);
+        // loop for rendering planets and satellites
+        for (int i { 0 }; i < planetVec.size(); ++i) {
+            lightingShader.use();
+            lightingShader.setVec3("light.position", lightPos[0], lightPos[1], lightPos[2]);
+            lightingShader.setVec3("viewPos", camera.Position);
 
         earth.draw();
 
@@ -173,7 +170,26 @@ int main()
         glActiveTexture(GL_TEXTURE4);
         glBindTexture(GL_TEXTURE_2D, diffuseMercuryMap);
 
-        mercury.draw();
+            // world transformation
+            lightingShader.setMat4("model", model);
+            glActiveTexture(planetVec[i].texGL);
+            glBindTexture(GL_TEXTURE_2D, planetVec[i].texture);
+            lightingShader.setInt("material.diffuse", 0);
+            lightingShader.setInt("material.specular", 0);
+            planetVec[i].planet.draw();
+
+            // shader specifically for rendering satellites, because they're without texture
+            satelliteShader.use();
+            // passing same projection and view matrix, lightpos viewpos
+            satelliteShader.setMat4("projection", projection);
+            satelliteShader.setMat4("view", view);
+
+            satelliteShader.setVec3("light.position", lightPos[0], lightPos[1], lightPos[2]);
+            satelliteShader.setVec3("viewPos", camera.Position);
+            for (int j { 0 }; j < planetVec[i].satVec.size(); ++j) {
+                planetVec[i].satVec[j].draw();
+            }
+        }
 
         sunShader.use();
 
