@@ -1,3 +1,4 @@
+
 #include "imgui/imgui.h"
 #include "imgui/imgui_impl_glfw.h"
 #include "imgui/imgui_impl_opengl3.h"
@@ -43,7 +44,12 @@ bool moveCamera = true;
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 
-// sphere
+struct PlanetBody {
+    Planet planet;
+    unsigned int texture;
+    unsigned int texGL;
+    std::vector<Satellite> satVec;
+};
 
 int main()
 {
@@ -92,17 +98,13 @@ int main()
     // load textures (we now use a utility function to keep the code more
     // organized)
     unsigned int diffuseEarthMap = loadTexture("../otherFiles/EarthTex.jpg");
-    unsigned int specularEarthMap = loadTexture("../otherFiles/EarthTex.jpg");
 
     unsigned int diffuseSunMap = loadTexture("../otherFiles/SunTex.png");
-    unsigned int specularSunMap = loadTexture("../otherFiles/SunTex.png");
 
     unsigned int diffuseMercuryMap = loadTexture("../otherFiles/mercury.jpeg");
 
     // shader configuration
     lightingShader.use();
-    lightingShader.setInt("material.diffuse", 0);
-    lightingShader.setInt("material.specular", 1);
 
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
@@ -114,6 +116,7 @@ int main()
 
     //-----------------------------
     // Planets Declaration
+    // нужно организовать текстуры и планеты. Создам структуру хранящую планету, ее спутники, и ее текстуру
 
     // std::vector<Planet> planetList;
     // planetList.push_back(Planet(lightingShader.ID, 5.8f, 65, 59 * 24.0f, 0.24f, 7)); // Mercury
@@ -126,7 +129,14 @@ int main()
     float lightPos[3] = { 0.0f, 0.0f, 0.0f };
     float color[3] = { 1.0f, 0.3f, 0.4f };
     Sphere sun { sunShader.ID, 2.0f };
-    Satellite moon { satelliteShader.ID, earth.getTranslate(), 1.5f, 27, 27 * 24, 0.087f, glm::vec3(0.4f) };
+    std::vector<PlanetBody> planetVec;
+    planetVec.push_back({
+        { lightingShader.ID, 15, 365, 24.0f, 0.63f, 7 },
+        diffuseEarthMap,
+        GL_TEXTURE0,
+    });
+    planetVec[0].satVec.push_back({ satelliteShader.ID, planetVec[0].planet.getTranslate(), 1.5f, 27, 27 * 24, 0.087f, glm::vec3(0.4f) });
+
     //  render loop
     while (!glfwWindowShouldClose(window)) {
         // input
@@ -134,28 +144,10 @@ int main()
 
         frameStart();
 
-        // be sure to activate shader when setting uniforms/drawing objects
-        lightingShader.use();
-        lightingShader.setVec3("light.position", lightPos[0], lightPos[1], lightPos[2]);
-        lightingShader.setVec3("viewPos", camera.Position);
-
-        // light properties
-        lightingShader.setVec3("light.ambient", 0.2f, 0.2f, 0.2f);
-        lightingShader.setVec3("light.diffuse", 0.7f, 0.7f, 0.7f);
-        lightingShader.setVec3("light.specular", 1.0f, 1.0f, 1.0f);
-
-        // material properties
-        lightingShader.setFloat("material.shininess", 8.0f);
-        // view/projection transformations
         glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom),
             (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
         glm::mat4 view = camera.GetViewMatrix();
-        lightingShader.setMat4("projection", projection);
-        lightingShader.setMat4("view", view);
-
-        // world transformation
         glm::mat4 model = glm::mat4(1.0f);
-        lightingShader.setMat4("model", model);
 
         // loop for rendering planets and satellites
         for (int i { 0 }; i < planetVec.size(); ++i) {
@@ -163,12 +155,16 @@ int main()
             lightingShader.setVec3("light.position", lightPos[0], lightPos[1], lightPos[2]);
             lightingShader.setVec3("viewPos", camera.Position);
 
-        earth.draw();
+            // light properties
+            lightingShader.setVec3("light.ambient", 0.2f, 0.2f, 0.2f);
+            lightingShader.setVec3("light.diffuse", 0.7f, 0.7f, 0.7f);
+            lightingShader.setVec3("light.specular", 1.0f, 1.0f, 1.0f);
 
-        lightingShader.setInt("material.diffuse", 4);
-        lightingShader.setInt("material.specular", 4);
-        glActiveTexture(GL_TEXTURE4);
-        glBindTexture(GL_TEXTURE_2D, diffuseMercuryMap);
+            // material properties
+            lightingShader.setFloat("material.shininess", 8.0f);
+            // view/projection transformations
+            lightingShader.setMat4("projection", projection);
+            lightingShader.setMat4("view", view);
 
             // world transformation
             lightingShader.setMat4("model", model);
@@ -193,28 +189,16 @@ int main()
 
         sunShader.use();
 
-        sunShader.setInt("material.diffuse", 2);
-        sunShader.setInt("material.specular", 3);
+        sunShader.setInt("material.diffuse", 1);
+        sunShader.setInt("material.specular", 1);
         // bind diffuse map
-        glActiveTexture(GL_TEXTURE2);
+        glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, diffuseSunMap);
-        // // bind specular map
-        glActiveTexture(GL_TEXTURE3);
-        glBindTexture(GL_TEXTURE_2D, specularSunMap);
 
         sunShader.setMat4("projection", projection);
         sunShader.setMat4("view", view);
 
         sun.draw();
-
-        satelliteShader.use();
-
-        satelliteShader.setMat4("projection", projection);
-        satelliteShader.setMat4("view", view);
-
-        satelliteShader.setVec3("light.position", lightPos[0], lightPos[1], lightPos[2]);
-        satelliteShader.setVec3("viewPos", camera.Position);
-        moon.draw();
 
         ImGui::Begin("Solar system control menu!");
 
