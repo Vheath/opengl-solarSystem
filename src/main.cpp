@@ -1,9 +1,11 @@
+
 #include "imgui/imgui.h"
 #include "imgui/imgui_impl_glfw.h"
 #include "imgui/imgui_impl_opengl3.h"
-
-#include <cmath>
 #include <glad/glad.h>
+
+#include <GL/gl.h>
+#include <cmath>
 
 #include "stb_image/stb_image.h"
 #include <GLFW/glfw3.h>
@@ -13,6 +15,9 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include "include/camera.h"
+#include "include/common.h"
+#include "include/planet.h"
+#include "include/satellite.h"
 #include "include/shader.h"
 #include "include/sphere.h"
 
@@ -26,13 +31,7 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void processInput(GLFWwindow* window);
 unsigned int loadTexture(const char* path);
-void icosahedronDraw(float radius);
-
-// imgui
-bool drawCube = true;
-// settings
-const unsigned int SCR_WIDTH = 800;
-const unsigned int SCR_HEIGHT = 600;
+void frameStart();
 
 // camera
 Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
@@ -44,6 +43,24 @@ bool moveCamera = true;
 // timing
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
+
+struct PlanetBody {
+    Planet planet;
+    unsigned int texture;
+    unsigned int texGL;
+    std::vector<Satellite> satVec;
+};
+enum PlanetNum {
+    mercury = 0,
+    venus,
+    earth,
+    mars,
+    jupiter,
+    saturn,
+    uranus,
+    neptune
+
+};
 
 int main()
 {
@@ -59,7 +76,6 @@ int main()
 #endif
 
     // glfw window creation
-    // --------------------
     GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "LearnOpenGL", NULL, NULL);
     if (window == NULL) {
         std::cout << "Failed to create GLFW window" << std::endl;
@@ -75,105 +91,42 @@ int main()
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
     // glad: load all OpenGL function pointers
-    // ---------------------------------------
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
         std::cout << "Failed to initialize GLAD" << std::endl;
         return -1;
     }
 
     // configure global opengl state
-    // -----------------------------
     glEnable(GL_DEPTH_TEST);
 
     // build and compile shaders
-    // -------------------------
-    Shader lightCubeShader("../src/ShadersGLSL/shaderLightSource.vert",
-        "../src/ShadersGLSL/shaderLightSource.frag");
-    Shader lightingShader("../src/ShadersGLSL/lightShader.vert",
-        "../src/ShadersGLSL/lightShader.frag");
+    Shader satelliteShader("../src/ShadersGLSL/satelliteShader.vert", "../src/ShadersGLSL/satelliteShader.frag");
 
-    // set up vertex data (and buffer(s)) and configure vertex attributes
-    // ------------------------------------------------------------------
-    float vertices[] = {
-        // positions          // normals           // texture coords
-        -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, 0.5f, -0.5f,
-        -0.5f, 0.0f, 0.0f, -1.0f, 1.0f, 0.0f, 0.5f, 0.5f, -0.5f, 0.0f,
-        0.0f, -1.0f, 1.0f, 1.0f, 0.5f, 0.5f, -0.5f, 0.0f, 0.0f, -1.0f,
-        1.0f, 1.0f, -0.5f, 0.5f, -0.5f, 0.0f, 0.0f, -1.0f, 0.0f, 1.0f,
-        -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f,
+    Shader sunShader("../src/ShadersGLSL/sunShader.vert", "../src/ShadersGLSL/sunShader.frag");
 
-        -0.5f, -0.5f, 0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.5f, -0.5f,
-        0.5f, 0.0f, 0.0f, 1.0f, 1.0f, 0.0f, 0.5f, 0.5f, 0.5f, 0.0f,
-        0.0f, 1.0f, 1.0f, 1.0f, 0.5f, 0.5f, 0.5f, 0.0f, 0.0f, 1.0f,
-        1.0f, 1.0f, -0.5f, 0.5f, 0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f,
-        -0.5f, -0.5f, 0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
-
-        -0.5f, 0.5f, 0.5f, -1.0f, 0.0f, 0.0f, 1.0f, 0.0f, -0.5f, 0.5f,
-        -0.5f, -1.0f, 0.0f, 0.0f, 1.0f, 1.0f, -0.5f, -0.5f, -0.5f, -1.0f,
-        0.0f, 0.0f, 0.0f, 1.0f, -0.5f, -0.5f, -0.5f, -1.0f, 0.0f, 0.0f,
-        0.0f, 1.0f, -0.5f, -0.5f, 0.5f, -1.0f, 0.0f, 0.0f, 0.0f, 0.0f,
-        -0.5f, 0.5f, 0.5f, -1.0f, 0.0f, 0.0f, 1.0f, 0.0f,
-
-        0.5f, 0.5f, 0.5f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.5f, 0.5f,
-        -0.5f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0.5f, -0.5f, -0.5f, 1.0f,
-        0.0f, 0.0f, 0.0f, 1.0f, 0.5f, -0.5f, -0.5f, 1.0f, 0.0f, 0.0f,
-        0.0f, 1.0f, 0.5f, -0.5f, 0.5f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f,
-        0.5f, 0.5f, 0.5f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f,
-
-        -0.5f, -0.5f, -0.5f, 0.0f, -1.0f, 0.0f, 0.0f, 1.0f, 0.5f, -0.5f,
-        -0.5f, 0.0f, -1.0f, 0.0f, 1.0f, 1.0f, 0.5f, -0.5f, 0.5f, 0.0f,
-        -1.0f, 0.0f, 1.0f, 0.0f, 0.5f, -0.5f, 0.5f, 0.0f, -1.0f, 0.0f,
-        1.0f, 0.0f, -0.5f, -0.5f, 0.5f, 0.0f, -1.0f, 0.0f, 0.0f, 0.0f,
-        -0.5f, -0.5f, -0.5f, 0.0f, -1.0f, 0.0f, 0.0f, 1.0f,
-
-        -0.5f, 0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.5f, 0.5f,
-        -0.5f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f, 0.5f, 0.5f, 0.5f, 0.0f,
-        1.0f, 0.0f, 1.0f, 0.0f, 0.5f, 0.5f, 0.5f, 0.0f, 1.0f, 0.0f,
-        1.0f, 0.0f, -0.5f, 0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f,
-        -0.5f, 0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f
-    };
-    // positions all containers
-    // first, configure the cube's VAO (and VBO)
-    unsigned int VBO, cubeVAO;
-    glGenVertexArrays(1, &cubeVAO);
-    glGenBuffers(1, &VBO);
-
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-    glBindVertexArray(cubeVAO);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float),
-        (void*)(3 * sizeof(float)));
-    glEnableVertexAttribArray(1);
-    // glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float),
-    //    (void*)(6 * sizeof(float)));
-    // glEnableVertexAttribArray(2);
-
-    // second, configure the light's VAO (VBO stays the same; the vertices are
-    // the same for the light object which is also a 3D cube)
-    unsigned int lightCubeVAO;
-    glGenVertexArrays(1, &lightCubeVAO);
-    glBindVertexArray(lightCubeVAO);
-
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    // note that we update the lamp's position attribute's stride to reflect the
-    // updated buffer data
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);
+    Shader lightingShader("../src/ShadersGLSL/lightShader.vert", "../src/ShadersGLSL/lightShader.frag");
 
     // load textures (we now use a utility function to keep the code more
     // organized)
-    // -----------------------------------------------------------------------------
-    // unsigned int diffuseMap = loadTexture("../otherFiles/WoodenSteelContainer.png");
-    // unsigned int specularMap = loadTexture("../otherFiles/WoodenSteelContainerSpecular.png");
+    unsigned int diffuseSunMap = loadTexture("../otherFiles/sunmap.png");
 
+    unsigned int diffuseMercuryMap = loadTexture("../otherFiles/mercurymap.jpeg");
+
+    unsigned int diffuseVenusMap = loadTexture("../otherFiles/venusmap.jpg");
+
+    unsigned int diffuseEarthMap = loadTexture("../otherFiles/earthmap.jpg");
+
+    unsigned int diffuseMarsMap = loadTexture("../otherFiles/marsmap.jpg");
+
+    unsigned int diffuseJupiterMap = loadTexture("../otherFiles/jupitermap.jpg");
+
+    unsigned int diffuseSaturnMap = loadTexture("../otherFiles/saturnmap.jpg");
+
+    unsigned int difuseUranusMap = loadTexture("../otherFiles/uranusmap.jpg");
+
+    unsigned int difuseNeptuneMap = loadTexture("../otherFiles/neptunemap.jpg");
     // shader configuration
-    // --------------------
     lightingShader.use();
-    // lightingShader.setInt("material.diffuse", 0);
-    // lightingShader.setInt("material.specular", 1);
 
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
@@ -182,90 +135,128 @@ int main()
     ImGui::StyleColorsDark();
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init("#version 330");
-    float lightDir[3] = { -0.2f, -1.0f, -0.3f };
+
+    //-----------------------------
+    // Planets Declaration
+    float lightPos[3] = { 0.0f, 0.0f, 0.0f };
     float color[3] = { 1.0f, 0.3f, 0.4f };
-    float radius { 1.0f };
-    int subdivides { 1 };
+    Sphere sun { sunShader.ID, 2.0f };
+    std::vector<PlanetBody> planetVec;
+    // Mercury first
+    planetVec.push_back({ { lightingShader.ID, 5.8f, 88, 59 * 24.0f, 0.24f, 6 },
+        diffuseMercuryMap,
+        GL_TEXTURE1 });
 
-    Sphere sphere { 1.0f, subdivides };
-    // render loop
-    // -----------
+    // Venus third
+    planetVec.push_back({ { lightingShader.ID, 10.8f, 225, 243 * 24.0f, 0.60f, 6 },
+        diffuseVenusMap,
+        GL_TEXTURE2 });
+
+    // Earth third
+    planetVec.push_back({
+        { lightingShader.ID, 15, 365, 24.0f, 0.63f, 7 },
+        diffuseEarthMap,
+        GL_TEXTURE3,
+    });
+
+    // Mars fourth
+    planetVec.push_back({ { lightingShader.ID, 22.8f, 687, 24.8f, 0.34f, 6 },
+        diffuseMarsMap,
+        GL_TEXTURE4 });
+    // Deimos and Phobos
+
+    // Jupiter fifth 50(70) 3.21(7.21)
+    planetVec.push_back({ { lightingShader.ID, 50.8f, 4380, 9.8f, 3.21f, 6 },
+        diffuseJupiterMap,
+        GL_TEXTURE5 });
+
+    // Saturn sixth
+    planetVec.push_back({ { lightingShader.ID, 80.8f, 10950, 10.5f, 3.0f, 6 },
+        diffuseSaturnMap,
+        GL_TEXTURE6 });
+
+    // Uranus seventh (year 30k)
+    planetVec.push_back({ { lightingShader.ID, 100.0f, 20002, 17.0f, 1.0f, 6 },
+        difuseUranusMap,
+        GL_TEXTURE7 });
+
+    // Neptune eighth (year 60k)
+    planetVec.push_back({ { lightingShader.ID, 130.0f, 24002, 16.0f, 0.95f, 6 },
+        difuseNeptuneMap,
+        GL_TEXTURE8 });
+
+    planetVec[mars].satVec.push_back({ satelliteShader.ID, planetVec[mars].planet.getTranslate(), 1.3f, 1.264f, 30.2f, 0.067f, glm::vec3(0.4f) });
+    planetVec[mars].satVec.push_back({ satelliteShader.ID, planetVec[mars].planet.getTranslate(), 0.6f, 0.31f, 7.6f, 0.087f, glm::vec3(0.4f) });
+
+    planetVec[earth].satVec.push_back({ satelliteShader.ID, planetVec[earth].planet.getTranslate(), 1.5f, 27, 27 * 24, 0.087f, glm::vec3(0.4f) });
+    //-----------------------------
+    //  render loop
     while (!glfwWindowShouldClose(window)) {
-        // per-frame time logic
-        // --------------------
-        float currentFrame = static_cast<float>(glfwGetTime());
-        deltaTime = currentFrame - lastFrame;
-        lastFrame = currentFrame;
-
         // input
-        // -----
         processInput(window);
 
-        // render
-        // ------
-        glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        frameStart();
 
-        ImGui_ImplOpenGL3_NewFrame();
-        ImGui_ImplGlfw_NewFrame();
-        ImGui::NewFrame();
-
-        // be sure to activate shader when setting uniforms/drawing objects
-        lightingShader.use();
-        lightingShader.setVec3("light.direction", lightDir[0], lightDir[1], lightDir[2]);
-        lightingShader.setVec3("viewPos", camera.Position);
-
-        // light properties
-        lightingShader.setVec3("light.ambient", 0.1f, 0.1f, 0.1f);
-        lightingShader.setVec3("light.diffuse", 0.7f, 0.7f, 0.7f);
-        lightingShader.setVec3("light.specular", 1.0f, 1.0f, 1.0f);
-
-        // material properties
-        lightingShader.setFloat("material.shininess", 64.0f);
-        // view/projection transformations
         glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom),
-            (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+            (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 300.0f);
         glm::mat4 view = camera.GetViewMatrix();
-        lightingShader.setMat4("projection", projection);
-        lightingShader.setMat4("view", view);
-
-        // world transformation
         glm::mat4 model = glm::mat4(1.0f);
-        lightingShader.setMat4("model", model);
 
+        // loop for rendering planets and satellites
+        for (int i { 0 }; i < planetVec.size(); ++i) {
+            lightingShader.use();
+            lightingShader.setVec3("light.position", lightPos[0], lightPos[1], lightPos[2]);
+            lightingShader.setVec3("viewPos", camera.Position);
+
+            // light properties
+            lightingShader.setVec3("light.ambient", 0.2f, 0.2f, 0.2f);
+            lightingShader.setVec3("light.diffuse", 0.7f, 0.7f, 0.7f);
+            lightingShader.setVec3("light.specular", 1.0f, 1.0f, 1.0f);
+
+            // material properties
+            lightingShader.setFloat("material.shininess", 8.0f);
+            // view/projection transformations
+            lightingShader.setMat4("projection", projection);
+            lightingShader.setMat4("view", view);
+
+            // world transformation
+            lightingShader.setMat4("model", model);
+            glActiveTexture(planetVec[i].texGL);
+            glBindTexture(GL_TEXTURE_2D, planetVec[i].texture);
+            lightingShader.setInt("material.diffuse", planetVec[i].texture - 1);
+            lightingShader.setInt("material.specular", planetVec[i].texture - 1);
+            planetVec[i].planet.draw();
+
+            // shader specifically for rendering satellites, because they're without texture
+            satelliteShader.use();
+            // passing same projection and view matrix, lightpos viewpos
+            satelliteShader.setMat4("projection", projection);
+            satelliteShader.setMat4("view", view);
+
+            satelliteShader.setVec3("light.position", lightPos[0], lightPos[1], lightPos[2]);
+            satelliteShader.setVec3("viewPos", camera.Position);
+            for (int j { 0 }; j < planetVec[i].satVec.size(); ++j) {
+                planetVec[i].satVec[j].draw();
+            }
+        }
+
+        sunShader.use();
+
+        sunShader.setInt("material.diffuse", 1);
+        sunShader.setInt("material.specular", 1);
         // bind diffuse map
-        // glActiveTexture(GL_TEXTURE0);
-        // glBindTexture(GL_TEXTURE_2D, diffuseMap);
-        // // bind specular map
-        // glActiveTexture(GL_TEXTURE1);
-        // glBindTexture(GL_TEXTURE_2D, specularMap);
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, diffuseSunMap);
 
-        // render the cube
-        // glBindVertexArray(cubeVAO);
-        // glDrawArrays(GL_TRIANGLES, 0, 36);*/
+        sunShader.setMat4("projection", projection);
+        sunShader.setMat4("view", view);
 
-        // render containers
-        sphere.draw();
-
-        // a lamp object is weird when we only have a directional light, don't
-        // render the light object lightCubeShader.use();
-        // lightCubeShader.setMat4("projection", projection);
-        // lightCubeShader.setMat4("view", view);
-        // model = glm::mat4(1.0f);
-        // model = glm::translate(model, lightPos);
-        // model = glm::scale(model, glm::vec3(0.2f)); // a smaller cube
-        // lightCubeShader.setMat4("model", model);
-
-        // glBindVertexArray(lightCubeVAO);
-        // glDrawArrays(GL_TRIANGLES, 0, 36);
+        sun.draw();
 
         ImGui::Begin("Solar system control menu!");
-        ImGui::Checkbox("Draw cube", &drawCube);
-        if (ImGui::SliderFloat("Radius", &radius, 0.1f, 10.0f))
-            sphere.setRadius(radius);
-        if (ImGui::SliderInt("Subdivides", &subdivides, 1, 7))
-            sphere.setSubdivision(subdivides);
-        ImGui::SliderFloat3("Light direction", &lightDir[0], -1.0f, 1.0f);
+
+        ImGui::SliderFloat("Time multiplier", &timeMult, 1.0f, 10000000.0f);
+        ImGui::SliderFloat3("Light position", &lightPos[0], -1.0f, 1.0f);
         ImGui::ColorEdit3("Color", color);
         ImGui::End();
 
@@ -273,31 +264,37 @@ int main()
 
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-        // glfw: swap buffers and poll IO events (keys pressed/released, mouse
-        // moved etc.)
-        // -------------------------------------------------------------------------------
+
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
 
-    // optional: de-allocate all resources once they've outlived their purpose:
-    // ------------------------------------------------------------------------
+    // de-allocate all resources once they've outlived their purpose:
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
     ImGui::DestroyContext();
-    glDeleteVertexArrays(1, &cubeVAO);
-    glDeleteVertexArrays(1, &lightCubeVAO);
-    glDeleteBuffers(1, &VBO);
 
-    // glfw: terminate, clearing all previously allocated GLFW resources.
-    // ------------------------------------------------------------------
     glfwTerminate();
     return 0;
 }
 
+void frameStart()
+{
+    // per-frame time logic
+    float currentFrame = static_cast<float>(glfwGetTime());
+    deltaTime = currentFrame - lastFrame;
+    lastFrame = currentFrame;
+
+    // render
+    glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    ImGui_ImplOpenGL3_NewFrame();
+    ImGui_ImplGlfw_NewFrame();
+    ImGui::NewFrame();
+}
 // process all input: query GLFW whether relevant keys are pressed/released this
 // frame and react accordingly
-// ---------------------------------------------------------------------------------------------------------
 void processInput(GLFWwindow* window)
 {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
@@ -327,17 +324,12 @@ void processInput(GLFWwindow* window)
 
 // glfw: whenever the window size changed (by OS or user resize) this callback
 // function executes
-// ---------------------------------------------------------------------------------------------
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
-    // make sure the viewport matches the new window dimensions; note that width
-    // and height will be significantly larger than specified on retina
-    // displays.
     glViewport(0, 0, width, height);
 }
 
 // glfw: whenever the mouse moves, this callback is called
-// -------------------------------------------------------
 void mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
 {
     float xpos = static_cast<float>(xposIn);
@@ -359,14 +351,12 @@ void mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
 }
 
 // glfw: whenever the mouse scroll wheel scrolls, this callback is called
-// ----------------------------------------------------------------------
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 {
     camera.ProcessMouseScroll(static_cast<float>(yoffset));
 }
 
 // utility function for loading a 2D texture from file
-// ---------------------------------------------------
 unsigned int loadTexture(char const* path)
 {
     unsigned int textureID;
@@ -388,11 +378,14 @@ unsigned int loadTexture(char const* path)
             GL_UNSIGNED_BYTE, data);
         glGenerateMipmap(GL_TEXTURE_2D);
 
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
-            GL_LINEAR_MIPMAP_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
         stbi_image_free(data);
     } else {
@@ -401,29 +394,4 @@ unsigned int loadTexture(char const* path)
     }
 
     return textureID;
-}
-
-void icosahedronDraw(float radius)
-{
-    float X { 0.525731112119133606f };
-    float Z { 0.850650808352039932f };
-
-    float vertices[12][3] {
-        { -X, 0, Z }, { X, 0, Z }, { -X, 0, -Z }, { X, 0, -Z },
-        { 0, Z, X }, { 0, Z, -X }, { 0, -Z, X }, { 0, -Z, -X },
-        { Z, X, 0 }, { -Z, X, 0 }, { Z, -X, 0 }, { -Z, -X, 0 }
-    };
-
-    for (auto element : vertices) {
-        element[0] *= radius;
-        element[1] *= radius;
-        element[2] *= radius;
-    }
-
-    static unsigned int tindices[20][3] = {
-        { 1, 4, 0 }, { 4, 9, 0 }, { 4, 9, 5 }, { 8, 5, 4 }, { 1, 8, 4 },
-        { 1, 10, 8 }, { 10, 3, 8 }, { 8, 3, 5 }, { 3, 2, 5 }, { 3, 7, 2 },
-        { 3, 10, 7 }, { 10, 6, 7 }, { 6, 11, 7 }, { 6, 0, 11 }, { 6, 1, 0 },
-        { 10, 1, 6 }, { 11, 0, 9 }, { 2, 11, 9 }, { 5, 2, 9 }, { 11, 2, 7 }
-    };
 }
