@@ -5,7 +5,7 @@
 
 class Planet {
 public:
-    Planet(unsigned int ShaderID, float distanceFromSun, int yearInEarthDays, float rotationSpeedInHr, float radius, int subdivision = 4);
+    Planet(unsigned int ShaderID, float distanceFromSun, int yearInEarthDays, float rotationSpeedInHr, float radius);
     void draw();
 
     glm::vec3* getTranslate();

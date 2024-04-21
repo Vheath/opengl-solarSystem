@@ -4,11 +4,11 @@
 #include <iostream>
 #include <numbers>
 
-Planet::Planet(unsigned int shaderID, float distanceFromSun, int yearInEarthDays, float rotationTimeInHr, float radius, int subdivision)
+Planet::Planet(unsigned int shaderID, float distanceFromSun, int yearInEarthDays, float rotationTimeInHr, float radius)
     : m_distanceFromSun(distanceFromSun)
     , m_yearLength(yearInEarthDays)
     , m_rotationTimeInHr(rotationTimeInHr)
-    , m_sphere(shaderID, radius, subdivision)
+    , m_sphere(shaderID, radius)
 {
     m_sphere.setTranslate(glm::vec3(distanceFromSun, 0.0f, 0.0f));
     m_sphere.setRotationVec(glm::vec3(0.0f, 1.0f, 0.0f));
