@@ -12,7 +12,8 @@ Planet::Planet(unsigned int shaderID, float distanceFromSun, int yearInEarthDays
 {
     m_sphere.setTranslate(glm::vec3(distanceFromSun, 0.0f, 0.0f));
     m_sphere.setRotationVec(glm::vec3(0.0f, 1.0f, 0.0f));
-    m_consYear = (m_yearLength * 24 * 60 * 60) / (2 * std::numbers::pi); // 365 days(one earth year) / 2pi(one rotation)
+    m_yearSec = m_yearLength * 24 * 60 * 60; // 365 days(one earth year) / 2pi(one rotation)
+    m_consYear = m_yearSec / (2.0f * std::numbers::pi);
 }
 
 glm::vec3* Planet::getTranslate()
