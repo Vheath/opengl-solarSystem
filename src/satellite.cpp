@@ -7,7 +7,7 @@ Satellite::Satellite(unsigned int shaderID, glm::vec3* planetPos,
     : m_planetPos(planetPos)
     , m_color(color)
     , m_distanceInKm(distanceInKm)
-    , m_sphere(shaderID, radius, 5)
+    , m_sphere(shaderID, radius)
     , m_yearLength(yearInEarthDays)
     , m_rotationTimeInHr(rotationTimeInHr)
 {

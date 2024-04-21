@@ -7,12 +7,10 @@
 #include <vector>
 class Sphere {
 public:
-    Sphere(unsigned int ShaderID, float radius, int subdivision = 6);
+    Sphere(unsigned int ShaderID, float radius);
     void draw();
     void SetShaderID(unsigned int ID);
     void setRadius(float radius);
-    void setEdgeLength(float edge);
-    void setSubdivision(int subdivision);
     void setTranslate(glm::vec3 vec);
     void setRotationVec(glm::vec3 vec);
     void setRotationRad(float rad);
@@ -22,31 +20,26 @@ public:
     glm::vec3* getTranslate();
 
     void updateRadius();
-    std::vector<float> computeVertices();
-    void computeFaceNormal(const float v1[3], const float v2[3], const float v3[3], float n[3]);
-    void addLineIndices(unsigned int index);
-    void addIndices(unsigned int i1, unsigned int i2, unsigned int i3);
-    void addNormals(const float n1[3], const float n2[3], const float n3[3]); void addVertices(const float v1[3], const float v2[3], const float v3[3]);
     void buildInterleavedVertices();
     void buildVertices();
-    void subdivideVertices();
-    void computeHalfVertex(const float v1[3], const float v2[3], float length, float newV[3]);
-    glm::vec2 generateTexCoord(const float nx, const float ny, const float nz);
-    void icoNormVec(int i);
-    void genNorm();
-    void buildArr();
-    int m_subdivision;
 
 private:
     unsigned int m_shaderID;
     unsigned int m_VBO,
-        m_VAO;
-    float m_edgeLength;
+        m_VAO,
+        m_EBO;
+
+    static const unsigned int X_SEGMENTS = 64;
+    static const unsigned int Y_SEGMENTS = 64;
+    static const unsigned int stride = (3 + 2 + 3) * sizeof(float);
+    std::vector<glm::vec3> positions;
+    std::vector<glm::vec2> uv;
+    std::vector<glm::vec3> normals;
+    std::vector<unsigned int> indices;
+    unsigned int indexCount;
+    std::vector<float> data;
+
     float m_radius;
-    std::vector<float> m_vertices;
-    std::vector<float> m_interleavedVertices;
-    std::vector<float> m_normals;
-    std::vector<unsigned int> m_indices;
     float m_rotRad {};
 
     glm::mat4 m_model = glm::mat4(1.0f);
