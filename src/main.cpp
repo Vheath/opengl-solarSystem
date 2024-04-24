@@ -24,12 +24,14 @@
 #include <iostream>
 #include <math.h>
 #include <numbers>
+#include <string>
 #include <vector>
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void processInput(GLFWwindow* window);
+unsigned int loadCubeMap(std::vector<std::string> faces);
 unsigned int loadTexture(const char* path);
 void frameStart();
 
@@ -106,6 +108,8 @@ int main()
 
     Shader lightingShader("../src/ShadersGLSL/lightShader.vert", "../src/ShadersGLSL/lightShader.frag");
 
+    Shader skyboxShader("../src/ShadersGLSL/skyboxShader.vert", "../src/ShadersGLSL/skyboxShader.frag");
+
     // load textures (we now use a utility function to keep the code more
     // organized)
     unsigned int diffuseSunMap = loadTexture("../otherFiles/sunmap.png");
@@ -126,6 +130,73 @@ int main()
 
     unsigned int difuseNeptuneMap = loadTexture("../otherFiles/neptunemap.jpg");
     // shader configuration
+
+    std::vector<std::string> textureFaces = {
+        "/home/vheath/cppProjects/opengl-solarSystem/Developing/otherFiles/cubemap/right.jpg",
+        "/home/vheath/cppProjects/opengl-solarSystem/Developing/otherFiles/cubemap/left.jpg",
+        "/home/vheath/cppProjects/opengl-solarSystem/Developing/otherFiles/cubemap/top.jpg",
+        "/home/vheath/cppProjects/opengl-solarSystem/Developing/otherFiles/cubemap/bottom.jpg",
+        "/home/vheath/cppProjects/opengl-solarSystem/Developing/otherFiles/cubemap/left.jpg",
+        "/home/vheath/cppProjects/opengl-solarSystem/Developing/otherFiles/cubemap/right.jpg",
+    };
+    unsigned int cubeMapID = loadCubeMap(textureFaces);
+
+    skyboxShader.use();
+    skyboxShader.setInt("skybox", 0);
+
+    float skyboxVertices[] = {
+        // positions
+        -1.0f, 1.0f, -1.0f,
+        -1.0f, -1.0f, -1.0f,
+        1.0f, -1.0f, -1.0f,
+        1.0f, -1.0f, -1.0f,
+        1.0f, 1.0f, -1.0f,
+        -1.0f, 1.0f, -1.0f,
+
+        -1.0f, -1.0f, 1.0f,
+        -1.0f, -1.0f, -1.0f,
+        -1.0f, 1.0f, -1.0f,
+        -1.0f, 1.0f, -1.0f,
+        -1.0f, 1.0f, 1.0f,
+        -1.0f, -1.0f, 1.0f,
+
+        1.0f, -1.0f, -1.0f,
+        1.0f, -1.0f, 1.0f,
+        1.0f, 1.0f, 1.0f,
+        1.0f, 1.0f, 1.0f,
+        1.0f, 1.0f, -1.0f,
+        1.0f, -1.0f, -1.0f,
+
+        -1.0f, -1.0f, 1.0f,
+        -1.0f, 1.0f, 1.0f,
+        1.0f, 1.0f, 1.0f,
+        1.0f, 1.0f, 1.0f,
+        1.0f, -1.0f, 1.0f,
+        -1.0f, -1.0f, 1.0f,
+
+        -1.0f, 1.0f, -1.0f,
+        1.0f, 1.0f, -1.0f,
+        1.0f, 1.0f, 1.0f,
+        1.0f, 1.0f, 1.0f,
+        -1.0f, 1.0f, 1.0f,
+        -1.0f, 1.0f, -1.0f,
+
+        -1.0f, -1.0f, -1.0f,
+        -1.0f, -1.0f, 1.0f,
+        1.0f, -1.0f, -1.0f,
+        1.0f, -1.0f, -1.0f,
+        -1.0f, -1.0f, 1.0f,
+        1.0f, -1.0f, 1.0f
+    };
+    unsigned int skyboxVAO, skyboxVBO;
+    glGenVertexArrays(1, &skyboxVAO);
+    glGenBuffers(1, &skyboxVBO);
+    glBindVertexArray(skyboxVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, skyboxVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(skyboxVertices), &skyboxVertices, GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+
     lightingShader.use();
 
     IMGUI_CHECKVERSION();
@@ -143,12 +214,12 @@ int main()
     Sphere sun { sunShader.ID, 2.0f };
     std::vector<PlanetBody> planetVec;
     // Mercury first
-    planetVec.push_back({ { lightingShader.ID, 5.8f, 88, 59 * 24.0f, 0.24f},
+    planetVec.push_back({ { lightingShader.ID, 5.8f, 88, 59 * 24.0f, 0.24f },
         diffuseMercuryMap,
         GL_TEXTURE1 });
 
     // Venus third
-    planetVec.push_back({ { lightingShader.ID, 10.8f, 225, 243 * 24.0f, 0.60f},
+    planetVec.push_back({ { lightingShader.ID, 10.8f, 225, 243 * 24.0f, 0.60f },
         diffuseVenusMap,
         GL_TEXTURE2 });
 
@@ -196,7 +267,6 @@ int main()
         processInput(window);
 
         frameStart();
-
         glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom),
             (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 300.0f);
         glm::mat4 view = camera.GetViewMatrix();
@@ -253,6 +323,19 @@ int main()
 
         sun.draw();
 
+        // draw skybox as last
+        glDepthFunc(GL_LEQUAL); // change depth function so depth test passes when values are equal to depth buffer's content
+        skyboxShader.use();
+        view = glm::mat4(glm::mat3(camera.GetViewMatrix())); // remove translation from the view matrix
+        skyboxShader.setMat4("view", view);
+        skyboxShader.setMat4("projection", projection);
+        // skybox cube
+        glBindVertexArray(skyboxVAO);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, cubeMapID);
+        glDrawArrays(GL_TRIANGLES, 0, 36);
+        glBindVertexArray(0);
+        glDepthFunc(GL_LESS); // set depth function back to default
         ImGui::Begin("Solar system control menu!");
 
         ImGui::SliderFloat("Time multiplier", &timeMult, 1.0f, 10000000.0f);
@@ -274,6 +357,8 @@ int main()
     ImGui_ImplGlfw_Shutdown();
     ImGui::DestroyContext();
 
+    glDeleteVertexArrays(1, &skyboxVAO);
+    glDeleteBuffers(1, &skyboxVBO);
     glfwTerminate();
     return 0;
 }
@@ -286,7 +371,7 @@ void frameStart()
     lastFrame = currentFrame;
 
     // render
-    glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+    glClearColor(0.1f, 0.1f, 0.1f, 0.1f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     ImGui_ImplOpenGL3_NewFrame();
@@ -356,6 +441,31 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
     camera.ProcessMouseScroll(static_cast<float>(yoffset));
 }
 
+unsigned int loadCubeMap(std::vector<std::string> faces)
+{
+    unsigned int textureID;
+    glGenTextures(1, &textureID);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, textureID);
+
+    int width, height, nrChannels;
+    for (unsigned int i = 0; i < faces.size(); i++) {
+        unsigned char* data = stbi_load(faces[i].c_str(), &width, &height, &nrChannels, 0);
+        if (data) {
+            glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+            stbi_image_free(data);
+        } else {
+            std::cout << "Cubemap texture failed to load at path: " << faces[i] << std::endl;
+            stbi_image_free(data);
+        }
+    }
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+
+    return textureID;
+}
 // utility function for loading a 2D texture from file
 unsigned int loadTexture(char const* path)
 {
