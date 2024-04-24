@@ -13,6 +13,7 @@ Satellite::Satellite(unsigned int shaderID, glm::vec3* planetPos,
 {
 }
 
+
 void Satellite::draw()
 {
     glUniform3f(glGetUniformLocation(m_sphere.getShaderID(), "color"), m_color.x, m_color.y, m_color.z);

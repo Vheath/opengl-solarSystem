@@ -21,6 +21,11 @@ glm::vec3* Planet::getTranslate()
     return m_sphere.getTranslate();
 }
 
+void Planet::setShaderID(unsigned int ID)
+{
+    m_sphere.SetShaderID(ID);
+}
+
 void Planet::draw()
 {
 

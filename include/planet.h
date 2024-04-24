@@ -10,6 +10,8 @@ public:
 
     glm::vec3* getTranslate();
 
+    void setShaderID(unsigned int ID);
+
 private:
     Sphere m_sphere;
     float m_rotationTimeInHr;
