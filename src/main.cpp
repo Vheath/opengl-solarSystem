@@ -143,12 +143,12 @@ int main()
     Sphere sun { sunShader.ID, 2.0f };
     std::vector<PlanetBody> planetVec;
     // Mercury first
-    planetVec.push_back({ { lightingShader.ID, 5.8f, 88, 59 * 24.0f, 0.24f },
+    planetVec.push_back({ { lightingShader.ID, 5.8f, 88, 59 * 24.0f, 0.24f},
         diffuseMercuryMap,
         GL_TEXTURE1 });
 
     // Venus third
-    planetVec.push_back({ { lightingShader.ID, 10.8f, 225, 243 * 24.0f, 0.60f },
+    planetVec.push_back({ { lightingShader.ID, 10.8f, 225, 243 * 24.0f, 0.60f},
         diffuseVenusMap,
         GL_TEXTURE2 });
 
