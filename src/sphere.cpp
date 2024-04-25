@@ -73,11 +73,6 @@ void Sphere::draw()
     glDrawElements(GL_TRIANGLE_STRIP, indexCount, GL_UNSIGNED_INT, 0);
 }
 
-// update vertex positions only
-void Sphere::updateRadius()
-{
-}
-
 // generate vertices with flat shading
 // each triangle is independent (no shared vertices)
 void Sphere::buildVertices()
@@ -113,7 +108,11 @@ void Sphere::buildVertices()
         oddRow = !oddRow;
     }
     indexCount = static_cast<unsigned int>(indices.size());
+    buildData();
+}
 
+void Sphere::buildData()
+{
     for (unsigned int i = 0; i < positions.size(); ++i) {
         data.push_back(positions[i].x * m_radius);
         data.push_back(positions[i].y * m_radius);

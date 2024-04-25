@@ -19,8 +19,7 @@ public:
     glm::mat4 getModelMat();
     glm::vec3* getTranslate();
 
-    void updateRadius();
-    void buildInterleavedVertices();
+    void buildData();
     void buildVertices();
 
 private:

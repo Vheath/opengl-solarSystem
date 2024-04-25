@@ -11,14 +11,14 @@
 #include <string>
 
 class Shader {
-   public:
+public:
     // the program ID
     unsigned int ID;
 
     // constructor reads and builds the Shader
-    Shader(const char* vertexPath, const char* fragmentPath);
+    Shader(const char* vertexPath, const char* fragmentPath, const char* geometryPath = nullptr);
     // use/active the shader
-    void use();
+    void use() const;
     // utility uniform functions
     void setBool(const std::string& name, bool value) const;
     void setInt(const std::string& name, int value) const;
@@ -27,8 +27,9 @@ class Shader {
     void setVec3(const std::string& name, const glm::vec3 vec) const;
     void setMat4(const std::string& name, const glm::mat4& mat) const;
 
-   private:
-    void checkCompileErrors(unsigned int shader, std::string type) {
+private:
+    void checkCompileErrors(unsigned int shader, std::string type)
+    {
         int success;
         char infoLog[1024];
         if (type != "PROGRAM") {
@@ -57,5 +58,5 @@ class Shader {
         }
     }
 };
-#endif  // !SHADER_H
+#endif // !SHADER_H
 
