@@ -175,7 +175,7 @@ int main()
     planetVec[earth].satVec.push_back({ shader.ID, planetVec[earth].planet.getTranslate(), 1.5f, 27, 27 * 24, 0.087f, glm::vec3(0.4f) });
     // configure depth map FBO
     // -----------------------
-    const unsigned int shadowWidth = 1024, shadowHeight = 1024;
+    const unsigned int shadowWidth = 4096, shadowHeight = 4096;
     unsigned int depthMapFBO;
     glGenFramebuffers(1, &depthMapFBO);
     // create depth cubemap texture
@@ -225,7 +225,6 @@ int main()
         processInput(window);
 
         frameStart();
-        lightPos.z = static_cast<float>(sin(glfwGetTime() * 0.5) * 3.0);
 
         // render
         // ------
@@ -235,7 +234,7 @@ int main()
         // 0. create depth cubemap transformation matrices
         // -----------------------------------------------
         float near_plane = 1.0f;
-        float far_plane = 405.0f;
+        float far_plane = 1005.0f;
         glm::mat4 shadowProj = glm::perspective(glm::radians(90.0f), (float)shadowWidth / (float)shadowHeight, near_plane, far_plane);
         std::vector<glm::mat4> shadowTransforms;
         shadowTransforms.push_back(shadowProj * glm::lookAt(lightPos, lightPos + glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)));
@@ -263,7 +262,7 @@ int main()
         glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         shader.use();
-        glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+        glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 500.0f);
         glm::mat4 view = camera.GetViewMatrix();
         shader.setMat4("projection", projection);
         shader.setMat4("view", view);
@@ -278,12 +277,12 @@ int main()
         glBindTexture(GL_TEXTURE_CUBE_MAP, depthCubemap);
         renderScene(shader);
         sunShader.use();
-         sunShader.setMat4("projection", projection);
-         sunShader.setMat4("view", view);
-         sunShader.setInt("material.diffuse", diffuseSunMap - 1);
+        sunShader.setMat4("projection", projection);
+        sunShader.setMat4("view", view);
+        sunShader.setInt("material.diffuse", diffuseSunMap - 1);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, diffuseSunMap);
-         sun.draw();
+        sun.draw();
 
         // draw skybox as last
         // glDepthFunc(GL_LEQUAL);
