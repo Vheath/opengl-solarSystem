@@ -110,6 +110,7 @@ int main()
     Shader shader("../src/ShadersGLSL/lightShader.vert", "../src/ShadersGLSL/lightShader.frag");
     Shader simpleDepthShader("../src/ShadersGLSL/depthShader.vert", "../src/ShadersGLSL/depthShader.frag", "../src/ShadersGLSL/depthShader.geom");
     Shader sunShader("../src/ShadersGLSL/sunShader.vert", "../src/ShadersGLSL/sunShader.frag");
+    Shader skyboxShader("../src/ShadersGLSL/skyboxShader.vert", "../src/ShadersGLSL/skyboxShader.frag");
 
     unsigned int diffuseSunMap = loadTexture("../otherFiles/sunmap.png");
     unsigned int diffuseMercuryMap = loadTexture("../otherFiles/mercurymap.jpeg");
@@ -123,6 +124,67 @@ int main()
     // load textures
     // -------------
     unsigned int woodTexture = loadTexture("../otherFiles/earthmap.jpg");
+    float skyboxVertices[] = {
+        // positions
+        -1.0f, 1.0f, -1.0f,
+        -1.0f, -1.0f, -1.0f,
+        1.0f, -1.0f, -1.0f,
+        1.0f, -1.0f, -1.0f,
+        1.0f, 1.0f, -1.0f,
+        -1.0f, 1.0f, -1.0f,
+
+        -1.0f, -1.0f, 1.0f,
+        -1.0f, -1.0f, -1.0f,
+        -1.0f, 1.0f, -1.0f,
+        -1.0f, 1.0f, -1.0f,
+        -1.0f, 1.0f, 1.0f,
+        -1.0f, -1.0f, 1.0f,
+
+        1.0f, -1.0f, -1.0f,
+        1.0f, -1.0f, 1.0f,
+        1.0f, 1.0f, 1.0f,
+        1.0f, 1.0f, 1.0f,
+        1.0f, 1.0f, -1.0f,
+        1.0f, -1.0f, -1.0f,
+
+        -1.0f, -1.0f, 1.0f,
+        -1.0f, 1.0f, 1.0f,
+        1.0f, 1.0f, 1.0f,
+        1.0f, 1.0f, 1.0f,
+        1.0f, -1.0f, 1.0f,
+        -1.0f, -1.0f, 1.0f,
+
+        -1.0f, 1.0f, -1.0f,
+        1.0f, 1.0f, -1.0f,
+        1.0f, 1.0f, 1.0f,
+        1.0f, 1.0f, 1.0f,
+        -1.0f, 1.0f, 1.0f,
+        -1.0f, 1.0f, -1.0f,
+
+        -1.0f, -1.0f, -1.0f,
+        -1.0f, -1.0f, 1.0f,
+        1.0f, -1.0f, -1.0f,
+        1.0f, -1.0f, -1.0f,
+        -1.0f, -1.0f, 1.0f,
+        1.0f, -1.0f, 1.0f
+    };
+    std::vector<std::string> textureFaces = {
+        "/home/vheath/cppProjects/opengl-solarSystem/Developing/otherFiles/cubemap2/right.jpg",
+        "/home/vheath/cppProjects/opengl-solarSystem/Developing/otherFiles/cubemap2/left.jpg",
+        "/home/vheath/cppProjects/opengl-solarSystem/Developing/otherFiles/cubemap2/top.jpg",
+        "/home/vheath/cppProjects/opengl-solarSystem/Developing/otherFiles/cubemap2/bottom.jpg",
+        "/home/vheath/cppProjects/opengl-solarSystem/Developing/otherFiles/cubemap2/left.jpg",
+        "/home/vheath/cppProjects/opengl-solarSystem/Developing/otherFiles/cubemap2/right.jpg",
+    };
+    unsigned int cubeMapID = loadCubeMap(textureFaces);
+    unsigned int skyboxVAO, skyboxVBO;
+    glGenVertexArrays(1, &skyboxVAO);
+    glGenBuffers(1, &skyboxVBO);
+    glBindVertexArray(skyboxVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, skyboxVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(skyboxVertices), &skyboxVertices, GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
     //-----------------------------
     // Planets Declaration
     // Sphere sun { sunShader.ID, 2.0f };
@@ -285,18 +347,18 @@ int main()
         sun.draw();
 
         // draw skybox as last
-        // glDepthFunc(GL_LEQUAL);
-        // skyboxShader.use();
-        // view = glm::mat4(glm::mat3(camera.GetViewMatrix())); // remove translation from the view matrix
-        // skyboxShader.setMat4("view", view);
-        // skyboxShader.setMat4("projection", projection);
-        //// skybox cube
-        // glBindVertexArray(skyboxVAO);
-        // glActiveTexture(GL_TEXTURE0);
-        // glBindTexture(GL_TEXTURE_CUBE_MAP, cubeMapID);
-        // glDrawArrays(GL_TRIANGLES, 0, 36);
-        // glBindVertexArray(0);
-        // glDepthFunc(GL_LESS);
+        glDepthFunc(GL_LEQUAL);
+        skyboxShader.use();
+        view = glm::mat4(glm::mat3(camera.GetViewMatrix())); // remove translation from the view matrix
+        skyboxShader.setMat4("view", view);
+        skyboxShader.setMat4("projection", projection);
+        // skybox cube
+        glBindVertexArray(skyboxVAO);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, cubeMapID);
+        glDrawArrays(GL_TRIANGLES, 0, 36);
+        glBindVertexArray(0);
+        glDepthFunc(GL_LESS);
 
         ImGui::Begin("Solar system control menu!");
 
