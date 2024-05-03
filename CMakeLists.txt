@@ -16,6 +16,8 @@ add_executable(
     ${PROJECT_SOURCE_DIR}/src/planet.cpp
     ${PROJECT_SOURCE_DIR}/src/satellite.cpp
     ${PROJECT_SOURCE_DIR}/src/skybox.cpp
+    ${PROJECT_SOURCE_DIR}/src/solarSystem.cpp
+    ${PROJECT_SOURCE_DIR}/src/common.cpp
 )
 target_compile_features(out PRIVATE cxx_std_20)
 
