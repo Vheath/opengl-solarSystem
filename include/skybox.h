@@ -1,5 +1,6 @@
 #ifndef SKYBOX_H
 #define SKYBOX_H
+#include "include/shader.h"
 #include <glad/glad.h>
 #include <string>
 #include <vector>
@@ -9,10 +10,11 @@ public:
     Skybox(std::vector<std::string>& faces);
     unsigned int loadCubeMapTex(std::vector<std::string>& faces);
     void render();
+    Shader shader {"../src/ShadersGLSL/skyboxShader.vert", "../src/ShadersGLSL/skyboxShader.frag"};
 
 private:
     unsigned int skyboxVAO, skyboxVBO;
-unsigned int cubeMapID;
+    unsigned int cubeMapID;
     static constexpr float skyboxVertices[] = {
         // positions
         -1.0f, 1.0f, -1.0f,

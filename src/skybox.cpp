@@ -5,6 +5,7 @@
 
 Skybox::Skybox(std::vector<std::string>& faces)
 {
+    shader.use();
     unsigned int cubeMapID = loadCubeMapTex(faces);
     glGenVertexArrays(1, &skyboxVAO);
     glGenBuffers(1, &skyboxVBO);
@@ -17,7 +18,7 @@ Skybox::Skybox(std::vector<std::string>& faces)
 
 void Skybox::render()
 {
-        glDepthFunc(GL_LEQUAL);
+    glDepthFunc(GL_LEQUAL);
     glBindVertexArray(skyboxVAO);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_CUBE_MAP, cubeMapID);

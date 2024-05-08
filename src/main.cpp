@@ -157,7 +157,7 @@ int main()
 
         // render
         // ------
-        glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+        glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // 1. render scene to depth cubemap
@@ -192,20 +192,19 @@ int main()
         solarSystem.shader.setVec3("viewPos", camera.Position);
         solarSystem.shader.setInt("shadows", true); // enable/disable shadows by pressing 'SPACE'
         solarSystem.shader.setFloat("far_plane", far_plane);
+        solarSystem.sunShader.use();
+        solarSystem.sunShader.setMat4("projection", projection);
+        solarSystem.sunShader.setMat4("view", view);
 
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_CUBE_MAP, depthCubemap);
 
-        solarSystem.sunShader.use();
-        solarSystem.sunShader.setMat4("projection", projection);
-        solarSystem.sunShader.setMat4("view", view);
         solarSystem.render();
 
-        // draw skybox as last
-        skyboxShader.use();
+        skybox.shader.use();
         view = glm::mat4(glm::mat3(camera.GetViewMatrix())); // remove translation from the view matrix
-        skyboxShader.setMat4("view", view);
-        skyboxShader.setMat4("projection", projection);
+        skybox.shader.setMat4("view", view);
+        skybox.shader.setMat4("projection", projection);
         skybox.render();
 
         ImGui::Begin("Solar system control menu!");

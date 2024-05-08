@@ -35,7 +35,7 @@ public:
     Shader sunShader { "../src/ShadersGLSL/sunShader.vert", "../src/ShadersGLSL/sunShader.frag" };
 
 private:
-    Sphere sun ;
+    Sphere sun { 1, 1.0f };
     unsigned int diffuseSunMap;
     unsigned int diffuseMercuryMap;
     unsigned int diffuseVenusMap;
