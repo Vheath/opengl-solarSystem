@@ -29,6 +29,7 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void processInput(GLFWwindow* window);
+unsigned int loadCubeMapTex(std::vector<std::string>& faces);
 void frameStart();
 
 // camera
@@ -83,7 +84,7 @@ int main()
     // build and compile shaders
     // -------------------------
     Shader simpleDepthShader("../src/ShadersGLSL/depthShader.vert", "../src/ShadersGLSL/depthShader.frag", "../src/ShadersGLSL/depthShader.geom");
-    Shader skyboxShader("../src/ShadersGLSL/skyboxShader.vert", "../src/ShadersGLSL/skyboxShader.frag");
+    Shader shader { "../src/ShadersGLSL/skyboxShader.vert", "../src/ShadersGLSL/skyboxShader.frag" };
 
     std::vector<std::string> skyboxFaces = {
         "/home/vheath/cppProjects/opengl-solarSystem/Developing/otherFiles/cubemap2/right.jpg",
@@ -94,6 +95,21 @@ int main()
         "/home/vheath/cppProjects/opengl-solarSystem/Developing/otherFiles/cubemap2/right.jpg",
     };
     Skybox skybox { skyboxFaces };
+    // SKYBOX
+    // -----------------------------------
+    // unsigned int skyboxVAO, skyboxVBO;
+    // unsigned int cubeMapID;
+    // shader.use();
+    // cubeMapID = loadCubeMapTex(skyboxFaces);
+    // glGenVertexArrays(1, &skyboxVAO);
+    // glGenBuffers(1, &skyboxVBO);
+    // glBindVertexArray(skyboxVAO);
+    // glBindBuffer(GL_ARRAY_BUFFER, skyboxVBO);
+    // glBufferData(GL_ARRAY_BUFFER, sizeof(skyboxVertices), &skyboxVertices, GL_STATIC_DRAW);
+    // glEnableVertexAttribArray(0);
+    // glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    //------------------------------------
+    // SKYBOX
     SolarSystem solarSystem { "../src/ShadersGLSL/lightShader.vert", "../src/ShadersGLSL/lightShader.frag" };
 
     // configure depth map FBO
@@ -190,7 +206,6 @@ int main()
         solarSystem.shader.setMat4("view", view);
         solarSystem.shader.setVec3("lightPos", lightPos);
         solarSystem.shader.setVec3("viewPos", camera.Position);
-        solarSystem.shader.setInt("shadows", true); // enable/disable shadows by pressing 'SPACE'
         solarSystem.shader.setFloat("far_plane", far_plane);
         solarSystem.sunShader.use();
         solarSystem.sunShader.setMat4("projection", projection);
@@ -201,6 +216,7 @@ int main()
 
         solarSystem.render();
 
+        // draw skybox at last
         skybox.shader.use();
         view = glm::mat4(glm::mat3(camera.GetViewMatrix())); // remove translation from the view matrix
         skybox.shader.setMat4("view", view);
