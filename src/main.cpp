@@ -87,12 +87,12 @@ int main()
     Shader shader { "../src/ShadersGLSL/skyboxShader.vert", "../src/ShadersGLSL/skyboxShader.frag" };
 
     std::vector<std::string> skyboxFaces = {
-        "/home/vheath/cppProjects/opengl-solarSystem/Developing/otherFiles/cubemap2/right.jpg",
-        "/home/vheath/cppProjects/opengl-solarSystem/Developing/otherFiles/cubemap2/left.jpg",
-        "/home/vheath/cppProjects/opengl-solarSystem/Developing/otherFiles/cubemap2/top.jpg",
-        "/home/vheath/cppProjects/opengl-solarSystem/Developing/otherFiles/cubemap2/bottom.jpg",
-        "/home/vheath/cppProjects/opengl-solarSystem/Developing/otherFiles/cubemap2/left.jpg",
-        "/home/vheath/cppProjects/opengl-solarSystem/Developing/otherFiles/cubemap2/right.jpg",
+        "/home/vheath/cppProjects/opengl-solarSystem/Developing/otherFiles/CubeMapMain/PositiveX.jpg",
+        "/home/vheath/cppProjects/opengl-solarSystem/Developing/otherFiles/CubeMapMain/NegativeX.jpg",
+        "/home/vheath/cppProjects/opengl-solarSystem/Developing/otherFiles/CubeMapMain/PositiveY.jpg",
+        "/home/vheath/cppProjects/opengl-solarSystem/Developing/otherFiles/CubeMapMain/NegativeY.jpg",
+        "/home/vheath/cppProjects/opengl-solarSystem/Developing/otherFiles/CubeMapMain/PositiveZ.jpg",
+        "/home/vheath/cppProjects/opengl-solarSystem/Developing/otherFiles/CubeMapMain/NegativeZ.jpg",
     };
     Skybox skybox { skyboxFaces };
     // SKYBOX
@@ -145,6 +145,7 @@ int main()
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO();
     (void)io;
+    io.Fonts->AddFontFromFileTTF("../otherFiles/Font/arial.ttf", 20, NULL, io.Fonts->GetGlyphRangesCyrillic());
     ImGui::StyleColorsDark();
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init("#version 330");
@@ -225,8 +226,7 @@ int main()
 
         ImGui::Begin("Solar system control menu!");
 
-        ImGui::SliderFloat("Time multiplier", &timeMult, 1.0f, 10000000.0f);
-        ImGui::SliderFloat3("Light position", &lightPos[0], -1.0f, 1.0f);
+        ImGui::SliderFloat( "Множитель времени", &timeMult, 1.0f, 10000000.0f);
         ImGui::End();
 
         ImGui::Render();
