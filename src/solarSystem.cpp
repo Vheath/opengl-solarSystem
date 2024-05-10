@@ -1,11 +1,12 @@
 #include "include/solarSystem.h"
 #include "include/common.h"
+#include "include/planetRing.h"
 #include <GL/gl.h>
 
 SolarSystem::SolarSystem(std::string vertShader, std::string fragShader)
     : shader { vertShader.c_str(), fragShader.c_str() }
 {
-    sun = Sphere { sunShader.ID, 2.0f };
+    sun = Sphere { sunShader.ID, 1.0f };
 
     diffuseSunMap = loadTexture("../otherFiles/sunmap.png");
     diffuseMercuryMap = loadTexture("../otherFiles/mercurymap.jpeg");
@@ -17,16 +18,24 @@ SolarSystem::SolarSystem(std::string vertShader, std::string fragShader)
     difuseUranusMap = loadTexture("../otherFiles/uranusmap.jpg");
     difuseNeptuneMap = loadTexture("../otherFiles/neptunemap.jpg");
 
+    diffuseRingMap = loadTexture("../otherFiles/Saturn_Rings.jpg");
     initVec();
 }
 
 void SolarSystem::render()
 {
     sunShader.use();
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, diffuseSunMap);
-    sunShader.setInt("material.diffuse", diffuseSunMap - 1);
-    sun.draw();
+    sunShader.setMat4("model", glm::mat4(1.0f));
+    glActiveTexture(GL_TEXTURE10);
+    glBindTexture(GL_TEXTURE_2D, diffuseRingMap);
+    sunShader.setInt("material.diffuse", diffuseRingMap - 1);
+    saturnRing.render();
+
+    // sunShader.use();
+    // glActiveTexture(GL_TEXTURE1);
+    // glBindTexture(GL_TEXTURE_2D, diffuseSunMap);
+    // sunShader.setInt("material.diffuse", diffuseSunMap - 1);
+    // sun.draw();
     shader.use();
     for (int i { 0 }; i < planetVec.size(); ++i) {
         shader.use();

@@ -9,6 +9,7 @@ public:
     void draw();
 
     glm::vec3* getTranslate();
+    float getRadius();
 
     void setShaderID(unsigned int ID);
 

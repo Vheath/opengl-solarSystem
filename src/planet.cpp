@@ -26,6 +26,11 @@ void Planet::setShaderID(unsigned int ID)
     m_sphere.SetShaderID(ID);
 }
 
+float Planet::getRadius()
+{
+    return m_sphere.getRadius();
+}
+
 void Planet::draw()
 {
 

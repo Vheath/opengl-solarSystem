@@ -18,6 +18,7 @@ add_executable(
     ${PROJECT_SOURCE_DIR}/src/skybox.cpp
     ${PROJECT_SOURCE_DIR}/src/solarSystem.cpp
     ${PROJECT_SOURCE_DIR}/src/common.cpp
+    ${PROJECT_SOURCE_DIR}/src/planetRing.cpp
 )
 target_compile_features(out PRIVATE cxx_std_20)
 

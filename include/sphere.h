@@ -18,6 +18,7 @@ public:
     unsigned int getShaderID();
     glm::mat4 getModelMat();
     glm::vec3* getTranslate();
+    float getRadius();
 
     void buildData();
     void buildVertices();

@@ -3,6 +3,7 @@
 #include "include/planet.h"
 #include "include/satellite.h"
 #include "include/shader.h"
+#include "include/planetRing.h"
 #include <vector>
 
 struct PlanetBody {
@@ -45,5 +46,7 @@ private:
     unsigned int diffuseSaturnMap;
     unsigned int difuseUranusMap;
     unsigned int difuseNeptuneMap;
+    unsigned int diffuseRingMap;
+    PlanetRing saturnRing { glm::vec3(0.0f), 1.0f };
 };
 #endif // !SOLARSYSTEM_H

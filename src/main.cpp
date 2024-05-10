@@ -208,6 +208,7 @@ int main()
         solarSystem.shader.setVec3("lightPos", lightPos);
         solarSystem.shader.setVec3("viewPos", camera.Position);
         solarSystem.shader.setFloat("far_plane", far_plane);
+        solarSystem.shader.setBool("shadows", true);
         solarSystem.sunShader.use();
         solarSystem.sunShader.setMat4("projection", projection);
         solarSystem.sunShader.setMat4("view", view);
@@ -226,7 +227,7 @@ int main()
 
         ImGui::Begin("Solar system control menu!");
 
-        ImGui::SliderFloat( "Множитель времени", &timeMult, 1.0f, 10000000.0f);
+        ImGui::SliderFloat("Множитель времени", &timeMult, 1.0f, 10000000.0f);
         ImGui::End();
 
         ImGui::Render();
