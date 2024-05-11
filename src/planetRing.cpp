@@ -32,14 +32,14 @@ PlanetRing::PlanetRing(glm::vec3 center, float radius, int sectors)
 void PlanetRing::render()
 {
     glBindVertexArray(m_VAO);
-    glDrawElements(GL_TRIANGLE_STRIP, 4, GL_UNSIGNED_INT, 0);
+    glDrawElements(GL_TRIANGLES, m_indicies.size(), GL_UNSIGNED_INT, 0);
 }
 
 void PlanetRing::buildData()
 {
     initiateVertices();
     initiateUVs();
-    for (int i { 0 }; i < m_sectors * 4; ++i) {
+    for (int i { 0 }; i < m_sectors * 3 + 1; ++i) {
         m_data.push_back(m_vertices[i].x);
         m_data.push_back(m_vertices[i].y);
         m_data.push_back(m_vertices[i].z);
@@ -52,61 +52,60 @@ void PlanetRing::buildData()
 }
 void PlanetRing::initiateVertices()
 {
+    bool isEven { false };
     float twoPi { 2 * std::numbers::pi };
-    for (int i { 0 }; i < m_sectors; ++i) {
+    for (int i { 0 }; i <= m_sectors; i += 2) {
+        isEven = !isEven;
+
         float radianInStep { i * (twoPi / m_sectors) };
+        float radianInStepNext { (i + 1) * (twoPi / m_sectors) };
         glm::vec3 xz1 {}; // xz1 lies on sphere bound
         glm::vec3 xz2 {}; // xz2 far away
-        glm::vec3 xz3 {}; // xz3 lies on sphere, but next
-        glm::vec3 xz4 {}; // xz4 far away, but next
+        glm::vec3 xz3 {};
+        if (isEven) {
+            xz1.x = m_radiusPlanet * std::cos(radianInStep); // on sphere close
+            xz1.z = m_radiusPlanet * std::sin(radianInStep);
 
-        xz1.x = m_radiusPlanet * std::cos(radianInStep);
-        xz1.z = m_radiusPlanet * std::sin(radianInStep);
+            xz2.x = xz1.x + (m_radiusPlanet * std::cos(radianInStep)); // over sphere close
+            xz2.z = xz1.z + (m_radiusPlanet * std::sin(radianInStep));
 
-        xz2.x = xz1.x + (m_radiusPlanet * std::cos(radianInStep));
-        xz2.z = xz1.z + (m_radiusPlanet * std::sin(radianInStep));
+            xz3.x = m_radiusPlanet * std::cos(radianInStepNext); // on sphere next
+            xz3.z = m_radiusPlanet * std::sin(radianInStepNext);
+        } else {
+            xz1.x = (m_radiusPlanet * std::cos(radianInStep)) + (m_radiusPlanet * std::cos(radianInStep)); // over sphere close
+            xz1.z = (m_radiusPlanet * std::sin(radianInStep)) + (m_radiusPlanet * std::sin(radianInStep));
 
-        xz3.x = m_radiusPlanet * std::cos((i + 1) * (twoPi / m_sectors));
-        xz3.z = m_radiusPlanet * std::sin((i + 1) * (twoPi / m_sectors));
+            xz2.x = m_radiusPlanet * std::cos(radianInStepNext); // on sphere next
+            xz2.z = m_radiusPlanet * std::sin(radianInStepNext);
 
-        xz4.x = xz3.x + (m_radiusPlanet * std::cos((i + 1) * (twoPi / m_sectors)));
-        xz4.z = xz3.z + (m_radiusPlanet * std::sin((i + 1) * (twoPi / m_sectors)));
+            xz3.x = xz2.x + (m_radiusPlanet * std::cos(radianInStepNext)); // over sphere next
+            xz3.z = xz2.z + (m_radiusPlanet * std::sin(radianInStepNext));
+        }
 
         m_vertices.push_back(xz1);
         m_vertices.push_back(xz2);
         m_vertices.push_back(xz3);
-
-        // m_vertices.push_back(xz2);
-        m_vertices.push_back(xz4);
-        // m_vertices.push_back(xz3);
     }
 }
 
 void PlanetRing::initiateUVs()
 {
-    for (int i { 0 }; i < m_sectors; ++i) {
+    for (int i { 0 }; i <= m_sectors / 2; ++i) {
 
-        glm::vec2 uv1 = glm::vec2(0.0f, 0.0f);
-        glm::vec2 uv2 = glm::vec2(0.0f, 1.0f);
-        glm::vec2 uv3 = glm::vec2(1.0f, 0.0f);
-        glm::vec2 uv4 = glm::vec2(1.0f, 1.0f);
+        glm::vec2 uv1 = glm::vec2(0.0f, 0.0f + i % 2);
+        glm::vec2 uv2 = glm::vec2(0.0f, 1.0f - i % 2);
+        glm::vec2 uv3 = glm::vec2(1.0f, 0.0f + i % 2);
 
         m_uvs.push_back(uv1);
         m_uvs.push_back(uv2);
         m_uvs.push_back(uv3);
-
-        // m_uvs.push_back(uv2);
-        m_uvs.push_back(uv4);
-        // m_uvs.push_back(uv3);
     }
 }
-
 void PlanetRing::initiateIndicies()
 {
-    for (int i { 0 }; i < m_sectors * 4; ++i) {
+    for (int i { 0 }; i < m_sectors * 3 / 2; ++i) {
+        m_indicies.push_back(0 + i);
         m_indicies.push_back(1 + i);
         m_indicies.push_back(2 + i);
-        m_indicies.push_back(3 + i);
-        m_indicies.push_back(4 + i);
     }
 }

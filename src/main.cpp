@@ -212,11 +212,12 @@ int main()
         solarSystem.sunShader.use();
         solarSystem.sunShader.setMat4("projection", projection);
         solarSystem.sunShader.setMat4("view", view);
+        solarSystem.ringShader.use();
+        solarSystem.ringShader.setMat4("projection", projection);
+        solarSystem.ringShader.setMat4("view", view);
 
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_CUBE_MAP, depthCubemap);
-
-        solarSystem.render();
 
         // draw skybox at last
         skybox.shader.use();
@@ -224,6 +225,8 @@ int main()
         skybox.shader.setMat4("view", view);
         skybox.shader.setMat4("projection", projection);
         skybox.render();
+        solarSystem.render();
+
 
         ImGui::Begin("Solar system control menu!");
 

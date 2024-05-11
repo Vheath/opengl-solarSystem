@@ -34,6 +34,7 @@ public:
     void render(Shader customShader);
     Shader shader;
     Shader sunShader { "../src/ShadersGLSL/sunShader.vert", "../src/ShadersGLSL/sunShader.frag" };
+    Shader ringShader {"../src/ShadersGLSL/PlanetRingShader.vert", "../src/ShadersGLSL/PlanetRingShader.frag"};
 
 private:
     Sphere sun { 1, 1.0f };
