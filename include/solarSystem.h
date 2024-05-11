@@ -1,9 +1,9 @@
 #ifndef SOLARSYSTEM_H
 #define SOLARSYSTEM_H
 #include "include/planet.h"
+#include "include/planetRing.h"
 #include "include/satellite.h"
 #include "include/shader.h"
-#include "include/planetRing.h"
 #include <vector>
 
 struct PlanetBody {
@@ -34,7 +34,7 @@ public:
     void render(Shader customShader);
     Shader shader;
     Shader sunShader { "../src/ShadersGLSL/sunShader.vert", "../src/ShadersGLSL/sunShader.frag" };
-    Shader ringShader {"../src/ShadersGLSL/PlanetRingShader.vert", "../src/ShadersGLSL/PlanetRingShader.frag"};
+    Shader ringShader { "../src/ShadersGLSL/PlanetRingShader.vert", "../src/ShadersGLSL/PlanetRingShader.frag" };
 
 private:
     Sphere sun { 1, 1.0f };
@@ -48,6 +48,6 @@ private:
     unsigned int difuseUranusMap;
     unsigned int difuseNeptuneMap;
     unsigned int diffuseRingMap;
-    PlanetRing saturnRing { glm::vec3(0.0f), 1.0f };
+    PlanetRing saturnRing { 3.0f };
 };
 #endif // !SOLARSYSTEM_H

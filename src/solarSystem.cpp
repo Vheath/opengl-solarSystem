@@ -3,6 +3,8 @@
 #include "include/planetRing.h"
 #include <GL/gl.h>
 #include <GL/glext.h>
+#include <glm/ext/matrix_float4x4.hpp>
+#include <glm/ext/matrix_transform.hpp>
 unsigned int loadTextureRing(char const* path);
 
 SolarSystem::SolarSystem(std::string vertShader, std::string fragShader)
@@ -20,19 +22,19 @@ SolarSystem::SolarSystem(std::string vertShader, std::string fragShader)
     difuseUranusMap = loadTexture("../otherFiles/uranusmap.jpg");
     difuseNeptuneMap = loadTexture("../otherFiles/neptunemap.jpg");
 
-    diffuseRingMap = loadTextureRing("../otherFiles/SaturnRingRGBA.png");
+    diffuseRingMap = loadTexture("../otherFiles/SaturnRingRGBA.png");
     initVec();
+    // saturnRing.setCenter(planetVec[4].planet.getTranslate());
 }
 
 void SolarSystem::render()
 {
-    // saturnRing.render();
 
-    // sunShader.use();
-    // glActiveTexture(GL_TEXTURE1);
-    // glBindTexture(GL_TEXTURE_2D, diffuseSunMap);
-    // sunShader.setInt("material.diffuse", diffuseSunMap - 1);
-    // sun.draw();
+    sunShader.use();
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, diffuseSunMap);
+    sunShader.setInt("material.diffuse", diffuseSunMap - 1);
+    sun.draw();
     shader.use();
     for (int i { 0 }; i < planetVec.size(); ++i) {
         shader.use();
@@ -54,7 +56,8 @@ void SolarSystem::render()
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     ringShader.use();
-    ringShader.setMat4("model", glm::mat4(1.0f));
+     glm::mat4 model = glm::translate(glm::mat4(1.0f), *planetVec[saturn].planet.getTranslate());
+    ringShader.setMat4("model", model);
     glActiveTexture(GL_TEXTURE10);
     glBindTexture(GL_TEXTURE_2D, diffuseRingMap);
     ringShader.setInt("material.diffuse", diffuseRingMap - 1);
@@ -130,38 +133,4 @@ void SolarSystem::initVec()
     planetVec[mars].satVec.push_back({ shader.ID, planetVec[mars].planet.getTranslate(), 0.6f, 0.31f, 7.6f, 0.087f, glm::vec3(0.4f) });
 
     planetVec[earth].satVec.push_back({ shader.ID, planetVec[earth].planet.getTranslate(), 1.5f, 27, 27 * 24, 0.087f, glm::vec3(0.4f) });
-}
-
-unsigned int loadTextureRing(char const* path)
-{
-    unsigned int textureID;
-    glGenTextures(1, &textureID);
-
-    int width, height, nrComponents;
-    unsigned char* data = stbi_load(path, &width, &height, &nrComponents, 0);
-    if (data) {
-        GLenum format;
-        format = GL_RGBA;
-
-        glBindTexture(GL_TEXTURE_2D, textureID);
-        glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format,
-            GL_UNSIGNED_BYTE, data);
-        glGenerateMipmap(GL_TEXTURE_2D);
-
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-
-        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-
-        stbi_image_free(data);
-    } else {
-        std::cout << "Texture failed to load at path: " << path << std::endl;
-        stbi_image_free(data);
-    }
-
-    return textureID;
 }

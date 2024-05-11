@@ -8,18 +8,21 @@
 
 class PlanetRing {
 public:
-    PlanetRing(glm::vec3 center, float radiusm, int sectors = 100);
+    PlanetRing(glm::vec3* center, float radiusm, int sectors = 100);
+    PlanetRing(float radius, int sectors = 400);
+    PlanetRing();
     void render();
     void initiateVertices();
     void initiateUVs();
     void initiateIndicies();
     void buildData();
+    void setCenter(glm::vec3* vec);
 
 private:
     unsigned int m_VBO, m_VAO, m_EBO;
     float m_radiusPlanet;
     int m_sectors;
-    glm::vec3 m_centerOfPlanet;
+    glm::vec3* m_centerOfPlanet;
     std::vector<glm::vec3> m_vertices {};
     std::vector<glm::vec2> m_uvs {};
     std::vector<unsigned int> m_indicies {};

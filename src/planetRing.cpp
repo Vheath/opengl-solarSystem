@@ -1,14 +1,23 @@
 #include "include/planetRing.h"
 #include <GL/gl.h>
 #include <cmath>
+#include <cstddef>
+#include <glm/ext/vector_float3.hpp>
 #include <iostream>
 #include <numbers>
 
-PlanetRing::PlanetRing(glm::vec3 center, float radius, int sectors)
+PlanetRing::PlanetRing(glm::vec3* center, float radius, int sectors)
     : m_centerOfPlanet { center }
     , m_radiusPlanet { radius }
-    , m_sectors { 100 }
+    , m_sectors { 400 }
 {
+    if (center == nullptr) {
+        static glm::vec3 nullVec { glm::vec3(0.0f) };
+        m_centerOfPlanet = &nullVec;
+    }
+    initiateVertices();
+    initiateUVs();
+    initiateIndicies();
     buildData();
     initiateIndicies();
     glGenBuffers(1, &m_VBO);
@@ -25,8 +34,15 @@ PlanetRing::PlanetRing(glm::vec3 center, float radius, int sectors)
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(1);
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
-    // glEnableVertexAttribArray(2);
-    // glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, stride, (void*)(6 * sizeof(float)));
+}
+
+PlanetRing::PlanetRing(float radius, int sectors)
+    : PlanetRing(nullptr, radius, sectors)
+{
+}
+PlanetRing::PlanetRing()
+    : PlanetRing(nullptr, 1.0f)
+{
 }
 
 void PlanetRing::render()
@@ -35,32 +51,37 @@ void PlanetRing::render()
     glDrawElements(GL_TRIANGLES, m_indicies.size(), GL_UNSIGNED_INT, 0);
 }
 
+void PlanetRing::setCenter(glm::vec3* vec)
+{
+    m_centerOfPlanet = vec;
+    buildData();
+}
+
 void PlanetRing::buildData()
 {
-    initiateVertices();
-    initiateUVs();
-    for (int i { 0 }; i < m_sectors * 3 + 1; ++i) {
+    m_data.clear();
+    for (int i { 0 }; i < m_sectors * 3; ++i) {
         m_data.push_back(m_vertices[i].x);
         m_data.push_back(m_vertices[i].y);
         m_data.push_back(m_vertices[i].z);
-        std::cout << m_vertices[i].x << ' ' << m_vertices[i].z << '\n';
 
         m_data.push_back(m_uvs[i].x);
         m_data.push_back(m_uvs[i].y);
-        std::cout << m_uvs[i].x << ' ' << m_uvs[i].y << '\n';
     }
 }
 void PlanetRing::initiateVertices()
 {
+    m_vertices.clear();
     bool isEven { false };
     float twoPi { 2 * std::numbers::pi };
+
     for (int i { 0 }; i <= m_sectors; i += 2) {
         isEven = !isEven;
 
         float radianInStep { i * (twoPi / m_sectors) };
         float radianInStepNext { (i + 1) * (twoPi / m_sectors) };
-        glm::vec3 xz1 {}; // xz1 lies on sphere bound
-        glm::vec3 xz2 {}; // xz2 far away
+        glm::vec3 xz1 {};
+        glm::vec3 xz2 {};
         glm::vec3 xz3 {};
         if (isEven) {
             xz1.x = m_radiusPlanet * std::cos(radianInStep); // on sphere close
@@ -90,6 +111,7 @@ void PlanetRing::initiateVertices()
 
 void PlanetRing::initiateUVs()
 {
+    m_uvs.clear();
     for (int i { 0 }; i <= m_sectors / 2; ++i) {
 
         glm::vec2 uv1 = glm::vec2(0.0f, 0.0f + i % 2);
@@ -103,6 +125,7 @@ void PlanetRing::initiateUVs()
 }
 void PlanetRing::initiateIndicies()
 {
+    m_indicies.clear();
     for (int i { 0 }; i < m_sectors * 3 / 2; ++i) {
         m_indicies.push_back(0 + i);
         m_indicies.push_back(1 + i);

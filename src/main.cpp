@@ -95,21 +95,7 @@ int main()
         "/home/vheath/cppProjects/opengl-solarSystem/Developing/otherFiles/CubeMapMain/NegativeZ.jpg",
     };
     Skybox skybox { skyboxFaces };
-    // SKYBOX
-    // -----------------------------------
-    // unsigned int skyboxVAO, skyboxVBO;
-    // unsigned int cubeMapID;
-    // shader.use();
-    // cubeMapID = loadCubeMapTex(skyboxFaces);
-    // glGenVertexArrays(1, &skyboxVAO);
-    // glGenBuffers(1, &skyboxVBO);
-    // glBindVertexArray(skyboxVAO);
-    // glBindBuffer(GL_ARRAY_BUFFER, skyboxVBO);
-    // glBufferData(GL_ARRAY_BUFFER, sizeof(skyboxVertices), &skyboxVertices, GL_STATIC_DRAW);
-    // glEnableVertexAttribArray(0);
-    // glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-    //------------------------------------
-    // SKYBOX
+
     SolarSystem solarSystem { "../src/ShadersGLSL/lightShader.vert", "../src/ShadersGLSL/lightShader.frag" };
 
     // configure depth map FBO
@@ -225,8 +211,8 @@ int main()
         skybox.shader.setMat4("view", view);
         skybox.shader.setMat4("projection", projection);
         skybox.render();
-        solarSystem.render();
 
+        solarSystem.render();
 
         ImGui::Begin("Solar system control menu!");
 
