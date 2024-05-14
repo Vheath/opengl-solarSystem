@@ -2,18 +2,22 @@
 #include <GL/gl.h>
 #include <cmath>
 #include <cstddef>
+#include <glm/ext/matrix_transform.hpp>
 #include <glm/ext/vector_float3.hpp>
+#include <glm/fwd.hpp>
 #include <iostream>
 #include <numbers>
 
-PlanetRing::PlanetRing(glm::vec3* center, float radius, int sectors)
-    : m_centerOfPlanet { center }
+PlanetRing::PlanetRing(glm::vec3* translate, float radius, float lengthInRadius, int sectors)
+
+    : m_translateVec { translate }
     , m_radiusPlanet { radius }
     , m_sectors { 400 }
+    , m_lengthInRadius { lengthInRadius }
 {
-    if (center == nullptr) {
-        static glm::vec3 nullVec { glm::vec3(0.0f) };
-        m_centerOfPlanet = &nullVec;
+    if (translate == nullptr) {
+        static glm::vec3 nullvec = glm::vec3(0.0f);
+        m_translateVec = &nullvec;
     }
     initiateVertices();
     initiateUVs();
@@ -36,27 +40,42 @@ PlanetRing::PlanetRing(glm::vec3* center, float radius, int sectors)
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
 }
 
-PlanetRing::PlanetRing(float radius, int sectors)
-    : PlanetRing(nullptr, radius, sectors)
-{
-}
-PlanetRing::PlanetRing()
-    : PlanetRing(nullptr, 1.0f)
+PlanetRing::PlanetRing(float radius, float lengthInRadius, int sectors)
+    : PlanetRing(nullptr, radius, lengthInRadius, sectors)
 {
 }
 
-void PlanetRing::render()
+PlanetRing::PlanetRing()
+    : PlanetRing(1.0f)
 {
+}
+
+void PlanetRing::render(Shader& shader)
+{
+    glad_glDisable(GL_CULL_FACE);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    shader.use();
+    glm::mat4 model = glm::translate(glm::mat4(1.0f), *m_translateVec);
+
+    shader.setMat4("model", *m_model);
+
     glBindVertexArray(m_VAO);
     glDrawElements(GL_TRIANGLES, m_indicies.size(), GL_UNSIGNED_INT, 0);
+    glad_glEnable(GL_CULL_FACE);
+    glDisable(GL_BLEND);
 }
 
-void PlanetRing::setCenter(glm::vec3* vec)
+void PlanetRing::setTranslate(glm::vec3* vec)
 {
-    m_centerOfPlanet = vec;
+    m_translateVec = vec;
     buildData();
 }
 
+void PlanetRing::setModelMat(glm::mat4* model)
+{
+    m_model = model;
+}
 void PlanetRing::buildData()
 {
     m_data.clear();
@@ -69,6 +88,7 @@ void PlanetRing::buildData()
         m_data.push_back(m_uvs[i].y);
     }
 }
+
 void PlanetRing::initiateVertices()
 {
     m_vertices.clear();
@@ -87,20 +107,20 @@ void PlanetRing::initiateVertices()
             xz1.x = m_radiusPlanet * std::cos(radianInStep); // on sphere close
             xz1.z = m_radiusPlanet * std::sin(radianInStep);
 
-            xz2.x = xz1.x + (m_radiusPlanet * std::cos(radianInStep)); // over sphere close
-            xz2.z = xz1.z + (m_radiusPlanet * std::sin(radianInStep));
+            xz2.x = xz1.x + (m_radiusPlanet * m_lengthInRadius * std::cos(radianInStep)); // over sphere close
+            xz2.z = xz1.z + (m_radiusPlanet * m_lengthInRadius * std::sin(radianInStep));
 
             xz3.x = m_radiusPlanet * std::cos(radianInStepNext); // on sphere next
             xz3.z = m_radiusPlanet * std::sin(radianInStepNext);
         } else {
-            xz1.x = (m_radiusPlanet * std::cos(radianInStep)) + (m_radiusPlanet * std::cos(radianInStep)); // over sphere close
-            xz1.z = (m_radiusPlanet * std::sin(radianInStep)) + (m_radiusPlanet * std::sin(radianInStep));
+            xz1.x = (m_radiusPlanet * std::cos(radianInStep)) + (m_radiusPlanet * m_lengthInRadius * std::cos(radianInStep)); // over sphere close
+            xz1.z = (m_radiusPlanet * std::sin(radianInStep)) + (m_radiusPlanet * m_lengthInRadius * std::sin(radianInStep));
 
             xz2.x = m_radiusPlanet * std::cos(radianInStepNext); // on sphere next
             xz2.z = m_radiusPlanet * std::sin(radianInStepNext);
 
-            xz3.x = xz2.x + (m_radiusPlanet * std::cos(radianInStepNext)); // over sphere next
-            xz3.z = xz2.z + (m_radiusPlanet * std::sin(radianInStepNext));
+            xz3.x = xz2.x + (m_radiusPlanet * m_lengthInRadius * std::cos(radianInStepNext)); // over sphere next
+            xz3.z = xz2.z + (m_radiusPlanet * m_lengthInRadius * std::sin(radianInStepNext));
         }
 
         m_vertices.push_back(xz1);

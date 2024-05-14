@@ -14,9 +14,10 @@ public:
     void setTranslate(glm::vec3 vec);
     void setRotationVec(glm::vec3 vec);
     void setRotationRad(float rad);
+    void setTiltRad(float rad);
 
     unsigned int getShaderID();
-    glm::mat4 getModelMat();
+    glm::mat4* getModelMat();
     glm::vec3* getTranslate();
     float getRadius();
 
@@ -41,6 +42,7 @@ private:
 
     float m_radius;
     float m_rotRad {};
+    float m_tiltRad {};
 
     glm::mat4 m_model = glm::mat4(1.0f);
     glm::vec3 m_transVec = glm::vec3(0.0f);

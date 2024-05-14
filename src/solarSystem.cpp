@@ -22,9 +22,11 @@ SolarSystem::SolarSystem(std::string vertShader, std::string fragShader)
     difuseUranusMap = loadTexture("../otherFiles/uranusmap.jpg");
     difuseNeptuneMap = loadTexture("../otherFiles/neptunemap.jpg");
 
-    diffuseRingMap = loadTexture("../otherFiles/SaturnRingRGBA.png");
+    diffuseSaturnRingMap = loadTexture("../otherFiles/SaturnRingRGBA.png");
     initVec();
-    // saturnRing.setCenter(planetVec[4].planet.getTranslate());
+
+    saturnRing.setModelMat(planetVec[saturn].planet.m_sphere.getModelMat());
+    planetVec[saturn].planet.m_sphere.setTiltRad(0.25f);
 }
 
 void SolarSystem::render()
@@ -52,18 +54,11 @@ void SolarSystem::render()
         }
     }
 
-    glad_glDisable(GL_CULL_FACE);
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     ringShader.use();
-     glm::mat4 model = glm::translate(glm::mat4(1.0f), *planetVec[saturn].planet.getTranslate());
-    ringShader.setMat4("model", model);
     glActiveTexture(GL_TEXTURE10);
-    glBindTexture(GL_TEXTURE_2D, diffuseRingMap);
-    ringShader.setInt("material.diffuse", diffuseRingMap - 1);
-    saturnRing.render();
-    glad_glEnable(GL_CULL_FACE);
-    glDisable(GL_BLEND);
+    glBindTexture(GL_TEXTURE_2D, diffuseSaturnRingMap);
+    ringShader.setInt("material.diffuse", diffuseSaturnRingMap - 1);
+    saturnRing.render(ringShader);
 }
 
 void SolarSystem::render(Shader customShader)

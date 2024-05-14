@@ -12,9 +12,9 @@ public:
     float getRadius();
 
     void setShaderID(unsigned int ID);
+    Sphere m_sphere;
 
 private:
-    Sphere m_sphere;
     float m_rotationTimeInHr;
     int m_yearLength;
     float m_distanceFromSun;

@@ -47,7 +47,9 @@ private:
     unsigned int diffuseSaturnMap;
     unsigned int difuseUranusMap;
     unsigned int difuseNeptuneMap;
-    unsigned int diffuseRingMap;
-    PlanetRing saturnRing { 3.0f };
+    unsigned int diffuseSaturnRingMap;
+    unsigned int diffuseUranusRingMap;
+    PlanetRing saturnRing { 3.0f, 2.0f };
+    PlanetRing uranusRing {3.0f, 2.0f};
 };
 #endif // !SOLARSYSTEM_H
