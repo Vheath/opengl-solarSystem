@@ -33,11 +33,17 @@ void SolarSystem::render()
 {
 
     sunShader.use();
+    sunShader.setMat4("projection", projectionMat);
+    sunShader.setMat4("view", camera.GetViewMatrix());
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, diffuseSunMap);
     sunShader.setInt("material.diffuse", diffuseSunMap - 1);
     sun.draw();
+
     shader.use();
+        shader.setVec3("viewPos", camera.Position);
+    shader.setMat4("projection", projectionMat);
+    shader.setMat4("view", camera.GetViewMatrix());
     for (int i { 0 }; i < planetVec.size(); ++i) {
         shader.use();
         shader.setBool("drawTexture", true);
@@ -55,6 +61,7 @@ void SolarSystem::render()
     }
 
     ringShader.use();
+
     glActiveTexture(GL_TEXTURE10);
     glBindTexture(GL_TEXTURE_2D, diffuseSaturnRingMap);
     ringShader.setInt("material.diffuse", diffuseSaturnRingMap - 1);

@@ -1,4 +1,5 @@
 #include "include/planetRing.h"
+#include "include/common.h"
 #include <GL/gl.h>
 #include <cmath>
 #include <cstddef>
@@ -59,6 +60,8 @@ void PlanetRing::render(Shader& shader)
     glm::mat4 model = glm::translate(glm::mat4(1.0f), *m_translateVec);
 
     shader.setMat4("model", *m_model);
+    shader.setMat4("projection", projectionMat);
+    shader.setMat4("view", camera.GetViewMatrix());
 
     glBindVertexArray(m_VAO);
     glDrawElements(GL_TRIANGLES, m_indicies.size(), GL_UNSIGNED_INT, 0);

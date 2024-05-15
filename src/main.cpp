@@ -147,11 +147,7 @@ int main()
     shadowTransforms.push_back(shadowProj * glm::lookAt(lightPos, lightPos + glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, -1.0f, 0.0f)));
 
     genProjectionMatrix(0.1f, 500.0f);
-    // RenderScene();
-    // render loop
-    // -----------
 
-    // RenderScene();
     //-----------------------------
     //   render loop
     while (!glfwWindowShouldClose(window)) {
@@ -187,31 +183,18 @@ int main()
         glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        glm::mat4 projection = projectionMat;
-        glm::mat4 view = camera.GetViewMatrix();
-
         solarSystem.shader.use();
-        solarSystem.shader.setMat4("projection", projection);
-        solarSystem.shader.setMat4("view", view);
         solarSystem.shader.setVec3("lightPos", lightPos);
-        solarSystem.shader.setVec3("viewPos", camera.Position);
         solarSystem.shader.setFloat("far_plane", far_plane);
         solarSystem.shader.setBool("shadows", true);
-        solarSystem.sunShader.use();
-        solarSystem.sunShader.setMat4("projection", projection);
-        solarSystem.sunShader.setMat4("view", view);
-        solarSystem.ringShader.use();
-        solarSystem.ringShader.setMat4("projection", projection);
-        solarSystem.ringShader.setMat4("view", view);
 
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_CUBE_MAP, depthCubemap);
 
         // draw skybox at last
         skybox.shader.use();
-        view = glm::mat4(glm::mat3(camera.GetViewMatrix())); // remove translation from the view matrix
-        skybox.shader.setMat4("view", view);
-        skybox.shader.setMat4("projection", projection);
+        skybox.shader.setMat4("view", camera.GetViewMatrix());
+        skybox.shader.setMat4("projection", projectionMat);
         skybox.render();
 
         solarSystem.render();
