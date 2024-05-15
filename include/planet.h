@@ -1,6 +1,7 @@
 #ifndef PLANET_H
 #define PLANET_H
 #include "include/common.h"
+#include "include/orbitOutline.h"
 #include "include/sphere.h"
 
 class Planet {
@@ -25,5 +26,6 @@ private:
     float lastFrame {};
     long double seconds {};
     float rotationInSec {};
+    OrbitOutline m_orbit {};
 };
 #endif //

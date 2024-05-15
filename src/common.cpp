@@ -1,4 +1,5 @@
 #include "include/common.h"
+#include <glm/ext/matrix_clip_space.hpp>
 
 unsigned int loadTexture(char const* path)
 {
@@ -37,4 +38,9 @@ unsigned int loadTexture(char const* path)
     }
 
     return textureID;
+}
+
+void genProjectionMatrix(float nearPlane, float farPlane)
+{
+    projectionMat = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, nearPlane, farPlane);
 }
