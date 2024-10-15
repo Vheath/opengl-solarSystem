@@ -4,7 +4,7 @@ find_package(glfw3 3.3 REQUIRED)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 find_package(OpenGL REQUIRED)
-add_subdirectory(lib/gladF)
+add_subdirectory(lib/glad)
 add_subdirectory(lib/stb_image)
 add_subdirectory(lib/imgui)
 add_executable(
