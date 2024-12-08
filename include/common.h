@@ -7,7 +7,7 @@
 #include <glm/vec3.hpp>
 #include <iostream>
 unsigned int loadTexture(char const* path);
-const unsigned int SCR_WIDTH = 1240;
+const unsigned int SCR_WIDTH = 1920;
 const unsigned int SCR_HEIGHT = 1080;
 inline float timeMult = 1.0f;
 inline Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));

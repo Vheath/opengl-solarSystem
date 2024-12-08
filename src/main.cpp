@@ -208,20 +208,22 @@ int main() {
     glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    solarSystem.shader.use();
-    solarSystem.shader.setVec3("lightPos", lightPos);
-    solarSystem.shader.setFloat("far_plane", far_plane);
-    solarSystem.shader.setBool("shadows", true);
 
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_CUBE_MAP, depthCubemap);
 
-    // draw skybox at last
+    // draw skybox at first 
+    glDepthMask(GL_FALSE);
     skybox.shader.use();
-    skybox.shader.setMat4("view", camera.GetViewMatrix());
+    skybox.shader.setMat4("view", glm::mat4(glm::mat3(camera.GetViewMatrix()))); //we dont need translation part in matrix
     skybox.shader.setMat4("projection", projectionMat);
     skybox.render();
+    glDepthMask(GL_TRUE);
 
+    solarSystem.shader.use();
+    solarSystem.shader.setVec3("lightPos", lightPos);
+    solarSystem.shader.setFloat("far_plane", far_plane);
+    solarSystem.shader.setBool("shadows", true);
     solarSystem.render();
 
     ImGui::Begin("Solar system control menu!");
