@@ -1,6 +1,7 @@
 #ifndef PLANET_H
 #define PLANET_H
 #include "include/common.h"
+#include "include/orbitOutline.h"
 #include "include/sphere.h"
 
 class Planet {
@@ -9,11 +10,12 @@ public:
     void draw();
 
     glm::vec3* getTranslate();
+    float getRadius();
 
     void setShaderID(unsigned int ID);
+    Sphere m_sphere;
 
 private:
-    Sphere m_sphere;
     float m_rotationTimeInHr;
     int m_yearLength;
     float m_distanceFromSun;
@@ -24,5 +26,6 @@ private:
     float lastFrame {};
     long double seconds {};
     float rotationInSec {};
+    OrbitOutline m_orbit {};
 };
 #endif //
