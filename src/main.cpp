@@ -1,8 +1,8 @@
 
+#include "glad/glad.h"
 #include "imgui/imgui.h"
 #include "imgui/imgui_impl_glfw.h"
 #include "imgui/imgui_impl_opengl3.h"
-#include <glad/glad.h>
 
 #include <GL/gl.h>
 #include <cmath>
@@ -127,17 +127,21 @@ int main() {
   glReadBuffer(GL_NONE);
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
+
   solarSystem.shader.use();
   solarSystem.shader.setInt("diffuseTexture", 0);
   solarSystem.shader.setInt("depthMap", 1);
 
   // lighting info
+
   IMGUI_CHECKVERSION();
   ImGui::CreateContext();
   ImGuiIO &io = ImGui::GetIO();
   (void)io;
+
   io.Fonts->AddFontFromFileTTF("../otherFiles/Font/arial.ttf", 20, NULL,
                                io.Fonts->GetGlyphRangesCyrillic());
+
   ImGui::StyleColorsDark();
   ImGui_ImplGlfw_InitForOpenGL(window, true);
   ImGui_ImplOpenGL3_Init("#version 330");
@@ -171,7 +175,6 @@ int main() {
                                glm::vec3(0.0f, -1.0f, 0.0f)));
 
   genProjectionMatrix(0.1f, 500.0f);
-
   //-----------------------------
   //   render loop
   while (!glfwWindowShouldClose(window)) {
@@ -192,12 +195,14 @@ int main() {
     glClear(GL_DEPTH_BUFFER_BIT);
 
     // configure shader
+
     simpleDepthShader.use();
     for (unsigned int i = 0; i < 6; ++i)
       simpleDepthShader.setMat4("shadowMatrices[" + std::to_string(i) + "]",
                                 shadowTransforms[i]);
     simpleDepthShader.setFloat("far_plane", far_plane);
     simpleDepthShader.setVec3("lightPos", lightPos);
+
 
     solarSystem.render(simpleDepthShader); // render
 
@@ -207,7 +212,6 @@ int main() {
     // -------------------------
     glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
 
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_CUBE_MAP, depthCubemap);
@@ -245,6 +249,7 @@ int main() {
 
   glfwTerminate();
   return 0;
+
 }
 
 void frameStart() {
@@ -320,4 +325,5 @@ void mouse_callback(GLFWwindow *window, double xposIn, double yposIn) {
 // glfw: whenever the mouse scroll wheel scrolls, this callback is called
 void scroll_callback(GLFWwindow *window, double xoffset, double yoffset) {
   camera.ProcessMouseScroll(static_cast<float>(yoffset));
+
 }

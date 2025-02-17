@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.10)
 project(openglSolar)
+#set(CMAKE_PREFIX_PATH "/run/opengl-driver/lib/")
 find_package(glfw3 3.3 REQUIRED)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
