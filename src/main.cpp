@@ -135,60 +135,65 @@ int main() {
 	}
 
 	genProjectionMatrix(0.1f, 500.0f);
-	//-----------------------------
+	int curPlanet = mercury; //TODO add sun
 	//   render loop
 	while (!glfwWindowShouldClose(window)) {
-	  // input
-	  processInput(window);
-	  frameStart();
-	
-	  // render
-	  glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
-	  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	
-	  // 1. render scene to depth cubemap
-	  glViewport(0, 0, shadowWidth, shadowHeight);
-	  glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
-	  glClear(GL_DEPTH_BUFFER_BIT);
-	
-	  simpleDepthShader.setFloat("far_plane", far_plane);
-	  simpleDepthShader.setVec3("lightPos", lightPos);
-	
-	  solarSystem.render(simpleDepthShader); // render
-	
-	  // 2. render scene as normal
-	  glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	  glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
-	  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	
-	  glActiveTexture(GL_TEXTURE1);
-	  glBindTexture(GL_TEXTURE_CUBE_MAP, depthCubemap);
-	
-	  // draw skybox at first 
-	  glDepthMask(GL_FALSE);
-	  skybox.shader.use();
-	  skybox.shader.setMat4("view", glm::mat4(glm::mat3(camera.GetViewMatrix()))); //we dont need translation part in matrix
-	  skybox.shader.setMat4("projection", projectionMat);
-	  skybox.render();
-	  glDepthMask(GL_TRUE);
-	
-	  // render solarSystem after skybox
-	  solarSystem.shader.use();
-	  solarSystem.shader.setVec3("lightPos", lightPos);
-	  solarSystem.shader.setFloat("far_plane", far_plane);
-	  solarSystem.shader.setBool("shadows", true);
-	  solarSystem.render();
-	
+	// input
+		processInput(window);
+		frameStart();
+		camera.Position = *solarSystem.planetVec[curPlanet].planet.getTranslate() + 
+			glm::vec3(0, 0.2f + camera.Dist + solarSystem.planetVec[curPlanet].planet.getRadius(),
+					0);
 
-	  // Imgui things
-	  ImGui::Begin("Solar system control menu!");
-	  ImGui::SliderFloat("Time mult", &timeMult, 1.0f, 10000000.0f);
-	  ImGui::End();
-	  ImGui::Render();
-	  ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-	
-	  glfwSwapBuffers(window);
-	  glfwPollEvents();
+		  // render
+		glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		
+		// 1. render scene to depth cubemap
+		glViewport(0, 0, shadowWidth, shadowHeight);
+		glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
+		glClear(GL_DEPTH_BUFFER_BIT);
+		
+		simpleDepthShader.setFloat("far_plane", far_plane);
+		simpleDepthShader.setVec3("lightPos", lightPos);
+		
+		solarSystem.render(simpleDepthShader); // render
+		
+		// 2. render scene as normal
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, depthCubemap);
+		
+		// draw skybox at first 
+		glDepthMask(GL_FALSE);
+		skybox.shader.use();
+		skybox.shader.setMat4("view", glm::mat4(glm::mat3(camera.GetViewMatrix()))); //we dont need translation part in matrix
+		skybox.shader.setMat4("projection", projectionMat);
+		skybox.render();
+		glDepthMask(GL_TRUE);
+		
+		// render solarSystem after skybox
+		solarSystem.shader.use();
+		solarSystem.shader.setVec3("lightPos", lightPos);
+		solarSystem.shader.setFloat("far_plane", far_plane);
+		solarSystem.shader.setBool("shadows", true);
+		solarSystem.render();
+		
+
+		// Imgui things
+		ImGui::Begin("Solar system control menu!");
+		ImGui::SliderFloat("Time mult", &timeMult, 1.0f, 10000000.0f);
+		ImGui::SliderFloat("Camera dist", &camera.Dist, 0.0f, 350.0f);
+		ImGui::SliderInt("Choose planet", &curPlanet, 0, 7);
+		ImGui::End();
+		ImGui::Render();
+		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+		
+		glfwSwapBuffers(window);
+		glfwPollEvents();
 	}
 	
 	// de-allocate all resources once they've outlived their purpose:
@@ -274,7 +279,6 @@ void mouse_callback(GLFWwindow *window, double xposIn, double yposIn) {
 // glfw: whenever the mouse scroll wheel scrolls, this callback is called
 void scroll_callback(GLFWwindow *window, double xoffset, double yoffset) {
   camera.ProcessMouseScroll(static_cast<float>(yoffset));
-
 }
 
 std::vector<glm::mat4> setShadowTransforms()
