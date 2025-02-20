@@ -1,3 +1,4 @@
+
 #version 330 core
 
 struct Material{
@@ -6,11 +7,12 @@ struct Material{
 
 uniform Material material;
 
-out vec3 FragColor;
+out vec4 FragColor;
 
 in vec2 TexCoords;
 
 void main()
 {
-    FragColor =vec3(texture(material.diffuse, TexCoords)); //set all 4 vector values to 1.0
+    FragColor = texture(material.diffuse, TexCoords);
+
 }
