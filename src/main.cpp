@@ -52,163 +52,151 @@ float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 
 int main() {
-  // glfw: initialize and configure
-  // ------------------------------
-  glfwInit();
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-  glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+	// glfw: initialize and configure
+	glfwInit();
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-#ifdef __APPLE__
-  glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-#endif
+	#ifdef __APPLE__
+	  glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+	#endif
 
-  // glfw window creation
-  GLFWwindow *window =
-      glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "LearnOpenGL", NULL, NULL);
-  if (window == NULL) {
-    std::cout << "Failed to create GLFW window" << std::endl;
-    glfwTerminate();
-    return -1;
-  }
-  glfwMakeContextCurrent(window);
-  glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-  glfwSetCursorPosCallback(window, mouse_callback);
-  glfwSetScrollCallback(window, scroll_callback);
+	// glfw window creation
+	GLFWwindow *window =
+	    glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "LearnOpenGL", NULL, NULL);
+	if (window == NULL) {
+	  std::cout << "Failed to create GLFW window" << std::endl;
+	  glfwTerminate();
+	  return -1;
+	}
+	glfwMakeContextCurrent(window);
+	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+	glfwSetCursorPosCallback(window, mouse_callback);
+	glfwSetScrollCallback(window, scroll_callback);
+	
+	// tell GLFW to capture our mouse
+	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	
+	// glad: load all OpenGL function pointers
+	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
+		std::cout << "Failed to initialize GLAD" << std::endl;
+		return -1;
+	}
+	
+	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_CULL_FACE);
+	
+	// build and compile shaders
+	Shader simpleDepthShader("../src/ShadersGLSL/depthShader.vert",
+	                         "../src/ShadersGLSL/depthShader.frag",
+	                         "../src/ShadersGLSL/depthShader.geom");
 
-  // tell GLFW to capture our mouse
-  glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	Shader shader{"../src/ShadersGLSL/skyboxShader.vert",
+	              "../src/ShadersGLSL/skyboxShader.frag"};
+	
+	std::vector<std::string> skyboxFaces = {
+	    "../otherFiles/CubeMapMain/PositiveX.jpg",
+	    "../otherFiles/CubeMapMain/NegativeX.jpg",
+	    "../otherFiles/CubeMapMain/PositiveY.jpg",
+	    "../otherFiles/CubeMapMain/NegativeY.jpg",
+	    "../otherFiles/CubeMapMain/PositiveZ.jpg",
+	    "../otherFiles/CubeMapMain/NegativeZ.jpg",
+	};
 
-  // glad: load all OpenGL function pointers
-  if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
-    std::cout << "Failed to initialize GLAD" << std::endl;
-    return -1;
-  }
-
-  glEnable(GL_DEPTH_TEST);
-  glEnable(GL_CULL_FACE);
-
-  // build and compile shaders
-  // -------------------------
-  Shader simpleDepthShader("../src/ShadersGLSL/depthShader.vert",
-                           "../src/ShadersGLSL/depthShader.frag",
-                           "../src/ShadersGLSL/depthShader.geom");
-  Shader shader{"../src/ShadersGLSL/skyboxShader.vert",
-                "../src/ShadersGLSL/skyboxShader.frag"};
-
-  std::vector<std::string> skyboxFaces = {
-      "../otherFiles/CubeMapMain/PositiveX.jpg",
-      "../otherFiles/CubeMapMain/NegativeX.jpg",
-      "../otherFiles/CubeMapMain/PositiveY.jpg",
-      "../otherFiles/CubeMapMain/NegativeY.jpg",
-      "../otherFiles/CubeMapMain/PositiveZ.jpg",
-      "../otherFiles/CubeMapMain/NegativeZ.jpg",
-  };
-  Skybox skybox{skyboxFaces};
-
-  SolarSystem solarSystem{"../src/ShadersGLSL/lightShader.vert",
-                          "../src/ShadersGLSL/lightShader.frag"};
-
-
-
-  solarSystem.shader.use();
-  solarSystem.shader.setInt("diffuseTexture", 0);
-  solarSystem.shader.setInt("depthMap", 1);
-
-  std::vector<glm::mat4> shadowTransforms = setShadowTransforms();
-
-  // lighting info
-
-  IMGUI_CHECKVERSION();
-  ImGui::CreateContext();
-  ImGuiIO &io = ImGui::GetIO();
-  (void)io;
-
-  io.Fonts->AddFontFromFileTTF("../otherFiles/Font/arial.ttf", 20, NULL,
+	Skybox skybox{skyboxFaces};
+	SolarSystem solarSystem{"../src/ShadersGLSL/lightShader.vert",
+	    					  "../src/ShadersGLSL/lightShader.frag"};
+	
+	solarSystem.shader.use();
+	solarSystem.shader.setInt("diffuseTexture", 0);
+	solarSystem.shader.setInt("depthMap", 1);
+	
+	std::vector<glm::mat4> shadowTransforms = setShadowTransforms();
+	
+	// lighting info
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	ImGuiIO &io = ImGui::GetIO();
+	(void)io;
+	
+	io.Fonts->AddFontFromFileTTF("../otherFiles/Font/arial.ttf", 20, NULL,
                                io.Fonts->GetGlyphRangesCyrillic());
 
-  ImGui::StyleColorsDark();
-  ImGui_ImplGlfw_InitForOpenGL(window, true);
-  ImGui_ImplOpenGL3_Init("#version 330");
+	ImGui::StyleColorsDark();
+	ImGui_ImplGlfw_InitForOpenGL(window, true);
+	ImGui_ImplOpenGL3_Init("#version 330");
 
-
-  genProjectionMatrix(0.1f, 500.0f);
-  //-----------------------------
-  //   render loop
-  while (!glfwWindowShouldClose(window)) {
-    // input
-    processInput(window);
-
-    frameStart();
-
-    // render
-    // ------
-    glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    // 1. render scene to depth cubemap
-    // --------------------------------
-    glViewport(0, 0, shadowWidth, shadowHeight);
-    glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
-    glClear(GL_DEPTH_BUFFER_BIT);
-
-    // configure shader
-
-    simpleDepthShader.use();
-    for (unsigned int i = 0; i < 6; ++i)
-	{
-      simpleDepthShader.setMat4("shadowMatrices[" + std::to_string(i) + "]", 
+	// configure depth shader
+	simpleDepthShader.use();
+	for (unsigned int i = 0; i < 6; ++i) {
+	  simpleDepthShader.setMat4("shadowMatrices[" + std::to_string(i) + "]", 
 			  										   shadowTransforms[i]);
 	}
-    simpleDepthShader.setFloat("far_plane", far_plane);
-    simpleDepthShader.setVec3("lightPos", lightPos);
 
+	genProjectionMatrix(0.1f, 500.0f);
+	//-----------------------------
+	//   render loop
+	while (!glfwWindowShouldClose(window)) {
+	  // input
+	  processInput(window);
+	  frameStart();
+	
+	  // render
+	  glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
+	  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	
+	  // 1. render scene to depth cubemap
+	  glViewport(0, 0, shadowWidth, shadowHeight);
+	  glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
+	  glClear(GL_DEPTH_BUFFER_BIT);
+	
+	  simpleDepthShader.setFloat("far_plane", far_plane);
+	  simpleDepthShader.setVec3("lightPos", lightPos);
+	
+	  solarSystem.render(simpleDepthShader); // render
+	
+	  // 2. render scene as normal
+	  glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	  glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
+	  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	
+	  glActiveTexture(GL_TEXTURE1);
+	  glBindTexture(GL_TEXTURE_CUBE_MAP, depthCubemap);
+	
+	  // draw skybox at first 
+	  glDepthMask(GL_FALSE);
+	  skybox.shader.use();
+	  skybox.shader.setMat4("view", glm::mat4(glm::mat3(camera.GetViewMatrix()))); //we dont need translation part in matrix
+	  skybox.shader.setMat4("projection", projectionMat);
+	  skybox.render();
+	  glDepthMask(GL_TRUE);
+	
+	  // render solarSystem after skybox
+	  solarSystem.shader.use();
+	  solarSystem.shader.setVec3("lightPos", lightPos);
+	  solarSystem.shader.setFloat("far_plane", far_plane);
+	  solarSystem.shader.setBool("shadows", true);
+	  solarSystem.render();
+	
 
-    solarSystem.render(simpleDepthShader); // render
-
-    // 2. render scene as normal
-    // -------------------------
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_CUBE_MAP, depthCubemap);
-
-    // draw skybox at first 
-    glDepthMask(GL_FALSE);
-    skybox.shader.use();
-    skybox.shader.setMat4("view", glm::mat4(glm::mat3(camera.GetViewMatrix()))); //we dont need translation part in matrix
-    skybox.shader.setMat4("projection", projectionMat);
-    skybox.render();
-    glDepthMask(GL_TRUE);
-
-    solarSystem.shader.use();
-    solarSystem.shader.setVec3("lightPos", lightPos);
-    solarSystem.shader.setFloat("far_plane", far_plane);
-    solarSystem.shader.setBool("shadows", true);
-    solarSystem.render();
-
-    ImGui::Begin("Solar system control menu!");
-
-    ImGui::SliderFloat("Множитель времени", &timeMult, 1.0f, 10000000.0f);
-    ImGui::End();
-
-    ImGui::Render();
-    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-
-    glfwSwapBuffers(window);
-    glfwPollEvents();
-  }
-
-  // de-allocate all resources once they've outlived their purpose:
-  ImGui_ImplOpenGL3_Shutdown();
-  ImGui_ImplGlfw_Shutdown();
-  ImGui::DestroyContext();
-
-  glfwTerminate();
-  return 0;
-
+	  // Imgui things
+	  ImGui::Begin("Solar system control menu!");
+	  ImGui::SliderFloat("Time mult", &timeMult, 1.0f, 10000000.0f);
+	  ImGui::End();
+	  ImGui::Render();
+	  ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+	
+	  glfwSwapBuffers(window);
+	  glfwPollEvents();
+	}
+	
+	// de-allocate all resources once they've outlived their purpose:
+	ImGui_ImplOpenGL3_Shutdown();
+	ImGui_ImplGlfw_Shutdown();
+	ImGui::DestroyContext();
+	
+	glfwTerminate();
 }
 
 
@@ -226,6 +214,7 @@ void frameStart() {
   ImGui_ImplGlfw_NewFrame();
   ImGui::NewFrame();
 }
+
 // process all input: query GLFW whether relevant keys are pressed/released this
 // frame and react accordingly
 void processInput(GLFWwindow *window) {
@@ -313,7 +302,6 @@ std::vector<glm::mat4> setShadowTransforms()
   glReadBuffer(GL_NONE);
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-
   glm::mat4 shadowProj = glm::perspective(
       glm::radians(90.0f), (float)shadowWidth / (float)shadowHeight, near_plane,
       far_plane);
@@ -339,6 +327,5 @@ std::vector<glm::mat4> setShadowTransforms()
       shadowProj * glm::lookAt(lightPos,
                                lightPos + glm::vec3(0.0f, 0.0f, -1.0f),
                                glm::vec3(0.0f, -1.0f, 0.0f)));
-
   return shadowTransforms;
 }
