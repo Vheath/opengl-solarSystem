@@ -31,6 +31,7 @@ void scroll_callback(GLFWwindow *window, double xoffset, double yoffset);
 void processInput(GLFWwindow *window);
 unsigned int loadCubeMapTex(std::vector<std::string> &faces);
 void frameStart();
+std::vector<glm::mat4> setShadowTransforms();
 
 // camera
 float lastX = SCR_WIDTH / 2.0f;
@@ -38,6 +39,13 @@ float lastY = SCR_HEIGHT / 2.0f;
 bool firstMouse = true;
 bool moveCamera = true;
 glm::vec3 lightPos = {0.0f, 0.0f, 0.0f};
+
+// Shadows
+const unsigned int shadowWidth = 4096, shadowHeight = 4096;
+unsigned int depthMapFBO;
+const float near_plane = 1.0f;
+const float far_plane = 1005.0f;
+unsigned int depthCubemap;
 
 // timing
 float deltaTime = 0.0f;
@@ -101,36 +109,13 @@ int main() {
   SolarSystem solarSystem{"../src/ShadersGLSL/lightShader.vert",
                           "../src/ShadersGLSL/lightShader.frag"};
 
-  // configure depth map FBO
-  const unsigned int shadowWidth = 4096, shadowHeight = 4096;
-  unsigned int depthMapFBO;
-  glGenFramebuffers(1, &depthMapFBO);
-
-  // create depth cubemap texture
-  unsigned int depthCubemap;
-  glGenTextures(1, &depthCubemap);
-  glBindTexture(GL_TEXTURE_CUBE_MAP, depthCubemap);
-  for (unsigned int i = 0; i < 6; ++i)
-    glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_DEPTH_COMPONENT,
-                 shadowWidth, shadowHeight, 0, GL_DEPTH_COMPONENT, GL_FLOAT,
-                 NULL);
-  glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-  glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-  glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-  glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-  glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-
-  // attach depth texture as FBO's depth buffer
-  glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
-  glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, depthCubemap, 0);
-  glDrawBuffer(GL_NONE);
-  glReadBuffer(GL_NONE);
-  glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 
   solarSystem.shader.use();
   solarSystem.shader.setInt("diffuseTexture", 0);
   solarSystem.shader.setInt("depthMap", 1);
+
+  std::vector<glm::mat4> shadowTransforms = setShadowTransforms();
 
   // lighting info
 
@@ -146,33 +131,6 @@ int main() {
   ImGui_ImplGlfw_InitForOpenGL(window, true);
   ImGui_ImplOpenGL3_Init("#version 330");
 
-  float near_plane = 1.0f;
-  float far_plane = 1005.0f;
-  glm::mat4 shadowProj = glm::perspective(
-      glm::radians(90.0f), (float)shadowWidth / (float)shadowHeight, near_plane,
-      far_plane);
-  std::vector<glm::mat4> shadowTransforms;
-  shadowTransforms.push_back(
-      shadowProj * glm::lookAt(lightPos, lightPos + glm::vec3(1.0f, 0.0f, 0.0f),
-                               glm::vec3(0.0f, -1.0f, 0.0f)));
-  shadowTransforms.push_back(
-      shadowProj * glm::lookAt(lightPos,
-                               lightPos + glm::vec3(-1.0f, 0.0f, 0.0f),
-                               glm::vec3(0.0f, -1.0f, 0.0f)));
-  shadowTransforms.push_back(
-      shadowProj * glm::lookAt(lightPos, lightPos + glm::vec3(0.0f, 1.0f, 0.0f),
-                               glm::vec3(0.0f, 0.0f, 1.0f)));
-  shadowTransforms.push_back(
-      shadowProj * glm::lookAt(lightPos,
-                               lightPos + glm::vec3(0.0f, -1.0f, 0.0f),
-                               glm::vec3(0.0f, 0.0f, -1.0f)));
-  shadowTransforms.push_back(
-      shadowProj * glm::lookAt(lightPos, lightPos + glm::vec3(0.0f, 0.0f, 1.0f),
-                               glm::vec3(0.0f, -1.0f, 0.0f)));
-  shadowTransforms.push_back(
-      shadowProj * glm::lookAt(lightPos,
-                               lightPos + glm::vec3(0.0f, 0.0f, -1.0f),
-                               glm::vec3(0.0f, -1.0f, 0.0f)));
 
   genProjectionMatrix(0.1f, 500.0f);
   //-----------------------------
@@ -198,18 +156,19 @@ int main() {
 
     simpleDepthShader.use();
     for (unsigned int i = 0; i < 6; ++i)
-      simpleDepthShader.setMat4("shadowMatrices[" + std::to_string(i) + "]",
-                                shadowTransforms[i]);
+	{
+      simpleDepthShader.setMat4("shadowMatrices[" + std::to_string(i) + "]", 
+			  										   shadowTransforms[i]);
+	}
     simpleDepthShader.setFloat("far_plane", far_plane);
     simpleDepthShader.setVec3("lightPos", lightPos);
 
 
     solarSystem.render(simpleDepthShader); // render
 
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
     // 2. render scene as normal
     // -------------------------
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -251,6 +210,7 @@ int main() {
   return 0;
 
 }
+
 
 void frameStart() {
   // per-frame time logic
@@ -326,4 +286,59 @@ void mouse_callback(GLFWwindow *window, double xposIn, double yposIn) {
 void scroll_callback(GLFWwindow *window, double xoffset, double yoffset) {
   camera.ProcessMouseScroll(static_cast<float>(yoffset));
 
+}
+
+std::vector<glm::mat4> setShadowTransforms()
+{
+  // configure depth map FBO
+  glGenFramebuffers(1, &depthMapFBO);
+
+  // create depth cubemap texture
+  glGenTextures(1, &depthCubemap);
+  glBindTexture(GL_TEXTURE_CUBE_MAP, depthCubemap);
+  for (unsigned int i = 0; i < 6; ++i)
+    glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_DEPTH_COMPONENT,
+                 shadowWidth, shadowHeight, 0, GL_DEPTH_COMPONENT, GL_FLOAT,
+                 NULL);
+  glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+
+  // attach depth texture as FBO's depth buffer
+  glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
+  glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, depthCubemap, 0);
+  glDrawBuffer(GL_NONE);
+  glReadBuffer(GL_NONE);
+  glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+
+  glm::mat4 shadowProj = glm::perspective(
+      glm::radians(90.0f), (float)shadowWidth / (float)shadowHeight, near_plane,
+      far_plane);
+  std::vector<glm::mat4> shadowTransforms;
+  shadowTransforms.push_back(
+      shadowProj * glm::lookAt(lightPos, lightPos + glm::vec3(1.0f, 0.0f, 0.0f),
+                               glm::vec3(0.0f, -1.0f, 0.0f)));
+  shadowTransforms.push_back(
+      shadowProj * glm::lookAt(lightPos,
+                               lightPos + glm::vec3(-1.0f, 0.0f, 0.0f),
+                               glm::vec3(0.0f, -1.0f, 0.0f)));
+  shadowTransforms.push_back(
+      shadowProj * glm::lookAt(lightPos, lightPos + glm::vec3(0.0f, 1.0f, 0.0f),
+                               glm::vec3(0.0f, 0.0f, 1.0f)));
+  shadowTransforms.push_back(
+      shadowProj * glm::lookAt(lightPos,
+                               lightPos + glm::vec3(0.0f, -1.0f, 0.0f),
+                               glm::vec3(0.0f, 0.0f, -1.0f)));
+  shadowTransforms.push_back(
+      shadowProj * glm::lookAt(lightPos, lightPos + glm::vec3(0.0f, 0.0f, 1.0f),
+                               glm::vec3(0.0f, -1.0f, 0.0f)));
+  shadowTransforms.push_back(
+      shadowProj * glm::lookAt(lightPos,
+                               lightPos + glm::vec3(0.0f, 0.0f, -1.0f),
+                               glm::vec3(0.0f, -1.0f, 0.0f)));
+
+  return shadowTransforms;
 }
